@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Anton, Oswald, Barlow_Condensed, Geist_Mono } from "next/font/google";
+import { SmoothScroll } from "@/components/smooth-scroll";
 import "./globals.css";
 
 const anton = Anton({
@@ -41,7 +42,9 @@ export default function RootLayout({
       lang="en"
       className={`${anton.variable} ${oswald.variable} ${barlow.variable} ${geistMono.variable} antialiased`}
     >
-      <body>{children}</body>
+      <body>
+        <SmoothScroll>{children}</SmoothScroll>
+      </body>
     </html>
   );
 }

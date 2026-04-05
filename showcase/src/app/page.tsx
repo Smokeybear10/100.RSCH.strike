@@ -1,9 +1,9 @@
-import { HeroPlayer } from "@/components/hero-player";
+import { ScrollHero } from "@/components/scroll-hero";
+import { BroadcastChrome } from "@/components/broadcast-chrome";
 import { FCCounter } from "@/components/fc-counter";
 import { FCUpload } from "@/components/fc-upload";
 import { SlamIn } from "@/components/slam-in";
 import { CountUp } from "@/components/count-up";
-import { demoClips } from "@/lib/demo-data";
 
 const socialLinks = [
   { name: "GitHub", href: "https://github.com/Smokeybear10" },
@@ -11,187 +11,18 @@ const socialLinks = [
   { name: "Website", href: "#" },
 ];
 
-const tickerItems = [
-  "N_STRIKES = 19",
-  "N_NEUTRAL = 19",
-  "WINDOW = 5 FRAMES",
-  "FPS = 30",
-  "DURATION = 150 MS",
-  "BASELINE = KINETICS-400",
-  "BACKBONE = TSN",
-  "MASK = SAM2",
-  "TRAINED IN < 60 S",
-  "ONE WEEKEND · ONE BROADCAST",
-];
-
 export default function Home() {
   return (
-    <main className="relative z-10 bg-black text-white font-[family-name:var(--font-barlow)] overflow-x-hidden">
+    <main className="relative z-10 bg-black text-white font-[family-name:var(--font-barlow)] overflow-x-clip">
       {/* ══════════════════════════════════════════════════════════════ */}
-      {/* BROADCAST CHROME — sticky top                                   */}
+      {/* BROADCAST CHROME — fixed, appears at weigh-in                   */}
       {/* ══════════════════════════════════════════════════════════════ */}
-      <div className="sticky top-0 z-50 bg-black border-b-[3px] border-[#dc2626] shadow-[0_4px_20px_rgba(220,38,38,0.2)]">
-        <div className="flex items-center justify-between px-5 py-2 bg-gradient-to-r from-[#dc2626] via-[#dc2626]/70 to-transparent">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-white live-dot" />
-              <span className="text-[10px] font-black tracking-[4px] uppercase text-white font-[family-name:var(--font-oswald)]">
-                LIVE
-              </span>
-            </div>
-            <span className="text-[9px] text-white/40 font-mono">●</span>
-            <span className="text-[10px] font-black tracking-[3px] uppercase text-white/95 font-[family-name:var(--font-oswald)]">
-              STR1KE Main Card
-            </span>
-            <span className="hidden sm:inline text-[9px] text-white/40 font-mono">
-              ●
-            </span>
-            <span className="hidden sm:inline text-[9px] font-mono tracking-[2px] uppercase text-white/75">
-              04 · 04 · 2025
-            </span>
-          </div>
-          <div className="text-[9px] sm:text-[10px] font-mono tracking-[2px] text-white/85">
-            TSN · KINETICS-400 · 38 SAMPLES
-          </div>
-        </div>
-        {/* Ticker */}
-        <div className="overflow-hidden bg-[#0a0000] border-t border-[#dc2626]/60">
-          <div className="flex gap-10 py-1.5 text-[10px] font-mono tracking-[2px] uppercase text-[#f59e0b] whitespace-nowrap animate-ticker w-max">
-            {Array.from({ length: 3 }).map((_, rep) => (
-              <span key={rep} className="flex gap-10 shrink-0">
-                {tickerItems.map((item, i) => (
-                  <span key={i} className="flex items-center gap-10 shrink-0">
-                    <span>{item}</span>
-                    <span className="text-white/30">//</span>
-                  </span>
-                ))}
-              </span>
-            ))}
-          </div>
-        </div>
-      </div>
+      <BroadcastChrome />
 
       {/* ══════════════════════════════════════════════════════════════ */}
-      {/* HERO — MAIN EVENT title card                                    */}
+      {/* HERO — cinematic scroll-scrubbed sequence                       */}
       {/* ══════════════════════════════════════════════════════════════ */}
-      <section className="relative px-5 pt-8 pb-10 overflow-hidden">
-        {/* Pre-fight intro */}
-        <div className="fade-up text-center mb-4">
-          <div className="inline-flex items-center gap-3 text-[9px] font-black tracking-[6px] uppercase text-[#f59e0b] font-[family-name:var(--font-oswald)]">
-            <span className="w-8 h-px bg-[#f59e0b]" />
-            <span>Tonight · Pay-Per-View</span>
-            <span className="w-8 h-px bg-[#f59e0b]" />
-          </div>
-        </div>
-
-        {/* Title card */}
-        <div className="fade-up fade-up-delay-1 relative flex items-center justify-center mb-4">
-          {/* Diagonal belt-reveal slash — dark red so the bright red "1" pops */}
-          <div className="absolute inset-x-0 h-[200px] bg-gradient-to-r from-transparent via-[#7f1d1d]/50 to-transparent skew-y-[-3deg] blur-md" />
-          <div className="absolute inset-x-0 h-[140px] bg-gradient-to-r from-transparent via-[#450a0a] to-transparent skew-y-[-3deg]" />
-
-          <div className="relative text-center">
-            <div className="text-[9px] font-black tracking-[8px] uppercase text-[#f59e0b] mb-2 font-[family-name:var(--font-oswald)]">
-              ⟨ Main Event ⟩
-            </div>
-            <h1 className="text-[88px] sm:text-[160px] font-black tracking-[4px] leading-[0.85] text-white font-[family-name:var(--font-anton)]">
-              STR
-              <span
-                className="text-[#dc2626]"
-                style={{
-                  textShadow:
-                    "0 0 24px rgba(220,38,38,1), 0 0 48px rgba(220,38,38,0.6)",
-                }}
-              >
-                1
-              </span>
-              KE
-            </h1>
-            <div className="text-[11px] font-black tracking-[6px] uppercase text-white/70 mt-1 font-[family-name:var(--font-oswald)]">
-              VS · A Weekend Of Footage
-            </div>
-          </div>
-        </div>
-
-        {/* Venue bar */}
-        <div className="fade-up fade-up-delay-1 max-w-[820px] mx-auto mb-5 flex items-center justify-between text-[9px] font-black tracking-[4px] uppercase text-white/60 font-[family-name:var(--font-oswald)] border-t border-b border-white/10 py-2">
-          <span>● T-Mobile Arena</span>
-          <span className="hidden sm:inline">Las Vegas · NV</span>
-          <span>38 Windows · 190 Frames</span>
-        </div>
-
-        {/* Tale of the Tape */}
-        <div className="fade-up fade-up-delay-2 max-w-[820px] mx-auto mb-6">
-          <div className="text-center mb-2 text-[9px] font-black tracking-[4px] uppercase text-[#f59e0b] font-[family-name:var(--font-oswald)]">
-            ▸ Tale Of The Tape ▸
-          </div>
-          <div className="grid grid-cols-4 gap-px bg-[#dc2626] p-px">
-            {[
-              { label: "Model", val: "TSN", sub: "Backbone" },
-              { label: "Pretrain", val: "400K", sub: "Kinetics clips" },
-              { label: "Fine-tune", val: "38", sub: "Hand-labeled" },
-              { label: "Window", val: "150ms", sub: "5 frames" },
-            ].map((s, i) => (
-              <div
-                key={s.label}
-                className={`bg-black px-3 py-2 text-center ${
-                  i === 2 ? "ring-2 ring-[#f59e0b] ring-inset" : ""
-                }`}
-              >
-                <div className="text-[8px] font-mono tracking-[2px] uppercase text-[#f59e0b]">
-                  {s.label}
-                </div>
-                <div className="text-[20px] sm:text-[24px] font-black tracking-wide text-white font-[family-name:var(--font-oswald)] leading-none mt-1">
-                  {s.val}
-                </div>
-                <div className="text-[7px] font-mono tracking-[1px] uppercase text-white/50 mt-0.5">
-                  {s.sub}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Player with broadcast frame */}
-        <div className="fade-up fade-up-delay-3 max-w-[920px] mx-auto">
-          <div className="relative border-[3px] border-[#dc2626] bg-black p-2">
-            {/* Feed label */}
-            <div className="absolute -top-2.5 left-4 bg-black px-2 text-[9px] font-black tracking-[3px] uppercase text-[#f59e0b] font-[family-name:var(--font-oswald)]">
-              ● Main Feed · Cam 01
-            </div>
-            {/* Corner brackets */}
-            <div className="absolute top-1 left-1 w-5 h-5 border-l-2 border-t-2 border-[#f59e0b]" />
-            <div className="absolute top-1 right-1 w-5 h-5 border-r-2 border-t-2 border-[#f59e0b]" />
-            <div className="absolute bottom-1 left-1 w-5 h-5 border-l-2 border-b-2 border-[#f59e0b]" />
-            <div className="absolute bottom-1 right-1 w-5 h-5 border-r-2 border-b-2 border-[#f59e0b]" />
-            <HeroPlayer clips={demoClips} />
-          </div>
-          {/* Scorecard strip below player */}
-          <div className="mt-2 flex items-center justify-between text-[9px] font-mono tracking-[2px] uppercase text-white/50 px-2">
-            <span>Scrub · Playlist · 3 Clips</span>
-            <span className="text-[#f59e0b]">Confidence Overlay · Live</span>
-          </div>
-        </div>
-
-        {/* Scroll indicator */}
-        <div className="fade-up fade-up-delay-4 mt-10 text-center">
-          <div className="inline-flex flex-col items-center gap-1 opacity-50">
-            <span className="text-[9px] text-[#f59e0b] font-black tracking-[4px] uppercase font-[family-name:var(--font-oswald)]">
-              Scroll · Fight Starts Below
-            </span>
-            <svg
-              width="12"
-              height="16"
-              viewBox="0 0 12 16"
-              fill="none"
-              className="text-[#f59e0b] animate-bounce"
-              style={{ animationDuration: "1.8s" }}
-            >
-              <path d="M6 1v14M1 10l5 5 5-5" stroke="currentColor" strokeWidth="1.5" />
-            </svg>
-          </div>
-        </div>
-      </section>
+      <ScrollHero />
 
       {/* ══════════════════════════════════════════════════════════════ */}
       {/* HIGHLIGHT REEL — stat callouts between rounds                   */}
@@ -227,9 +58,12 @@ export default function Home() {
       </section>
 
       {/* ══════════════════════════════════════════════════════════════ */}
-      {/* WEIGH-IN — 38 scoreboard                                        */}
+      {/* CHAPTER 1 — WEIGH-IN 38 (sticky)                                */}
       {/* ══════════════════════════════════════════════════════════════ */}
-      <section className="relative py-32 px-5 overflow-hidden">
+      <section
+        id="weigh-in"
+        className="sticky top-0 min-h-screen bg-black flex items-center justify-center overflow-hidden relative px-5"
+      >
         <FCCounter />
       </section>
 
@@ -256,8 +90,8 @@ export default function Home() {
       {/* ══════════════════════════════════════════════════════════════ */}
       {/* THREE ROUNDS — Pipeline with slam-in numerals                   */}
       {/* ══════════════════════════════════════════════════════════════ */}
-      <section className="py-32 px-5 relative">
-        <div className="max-w-[1100px] mx-auto">
+      <section className="sticky top-0 min-h-screen bg-black flex items-center overflow-hidden relative px-5">
+        <div className="max-w-[1100px] mx-auto w-full">
           <SlamIn variant="sweep" delay={0}>
             <div className="text-center mb-4">
               <div className="inline-flex items-center gap-3 text-[9px] font-black tracking-[6px] uppercase text-[#f59e0b] font-[family-name:var(--font-oswald)]">
@@ -366,11 +200,11 @@ export default function Home() {
       {/* ══════════════════════════════════════════════════════════════ */}
       {/* 150MS — scroll-linked giant number + frame-pop cards            */}
       {/* ══════════════════════════════════════════════════════════════ */}
-      <section className="py-32 px-5 relative">
+      <section className="sticky top-0 min-h-screen bg-black flex items-center overflow-hidden relative px-5">
         {/* Diagonal red slash background */}
         <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-[280px] bg-gradient-to-r from-transparent via-[#dc2626]/8 to-transparent skew-y-[-2deg] pointer-events-none" />
 
-        <div className="max-w-[1200px] mx-auto relative">
+        <div className="max-w-[1200px] mx-auto relative w-full">
           <SlamIn variant="sweep" delay={0}>
             <div className="text-center mb-12 text-[9px] font-black tracking-[6px] uppercase text-[#f59e0b] font-[family-name:var(--font-oswald)]">
               ⟨ The Call ⟩
@@ -487,8 +321,8 @@ export default function Home() {
       {/* ══════════════════════════════════════════════════════════════ */}
       {/* REPLAY — Scroll-draw confidence curve                           */}
       {/* ══════════════════════════════════════════════════════════════ */}
-      <section className="py-32 px-5">
-        <div className="max-w-[980px] mx-auto">
+      <section className="sticky top-0 min-h-screen bg-black flex items-center overflow-hidden px-5">
+        <div className="max-w-[980px] mx-auto w-full">
           <SlamIn variant="sweep" delay={0}>
             <div className="text-center mb-3 text-[9px] font-black tracking-[6px] uppercase text-[#f59e0b] font-[family-name:var(--font-oswald)]">
               ⟨ Replay ⟩
@@ -586,8 +420,8 @@ export default function Home() {
       {/* ══════════════════════════════════════════════════════════════ */}
       {/* STEP INTO THE OCTAGON — Upload                                  */}
       {/* ══════════════════════════════════════════════════════════════ */}
-      <section className="py-32 px-5 relative">
-        <div className="max-w-[900px] mx-auto">
+      <section className="sticky top-0 min-h-screen bg-black flex items-center overflow-hidden relative px-5">
+        <div className="max-w-[900px] mx-auto w-full">
           <SlamIn variant="sweep" delay={0}>
             <div className="text-center mb-3 text-[9px] font-black tracking-[6px] uppercase text-[#f59e0b] font-[family-name:var(--font-oswald)]">
               ⟨ Your Turn ⟩
