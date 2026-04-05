@@ -1,9 +1,22 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Anton, Oswald, Barlow_Condensed, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const anton = Anton({
+  variable: "--font-anton",
+  weight: "400",
+  subsets: ["latin"],
+});
+
+const oswald = Oswald({
+  variable: "--font-oswald",
+  weight: ["400", "500", "600", "700"],
+  subsets: ["latin"],
+});
+
+const barlow = Barlow_Condensed({
+  variable: "--font-barlow",
+  weight: ["400", "500", "600", "700"],
   subsets: ["latin"],
 });
 
@@ -13,9 +26,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "STR1KE | AI-Powered Strike Detection",
+  title: "STR1KE | Strike Detection · Main Event",
   description:
-    "Interactive showcase for STR1KE — MMA strike detection using SAM2 + TSN, trained on just 38 data points.",
+    "Fight Card broadcast. MMA strike detection using SAM2 + TSN, trained on 38 hand-labeled windows. One weekend of film study.",
 };
 
 export default function RootLayout({
@@ -26,7 +39,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+      className={`${anton.variable} ${oswald.variable} ${barlow.variable} ${geistMono.variable} antialiased`}
     >
       <body>{children}</body>
     </html>
