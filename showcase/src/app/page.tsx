@@ -69,39 +69,30 @@ export default function Home() {
       </section>
 
       {/* ══════════════════════════════════════════════════════════════ */}
-      {/* COMMENTARY BREAK                                                */}
-      {/* ══════════════════════════════════════════════════════════════ */}
-      <section className="border-t-2 border-b-2 border-[#dc2626]/60 bg-[#0a0000] py-5 overflow-hidden">
-        <div className="max-w-[1100px] mx-auto px-5 flex items-center gap-4">
-          <SlamIn variant="sweep" delay={0}>
-            <div className="shrink-0 bg-[#dc2626] px-3 py-1 text-[9px] font-black tracking-[3px] uppercase text-white font-[family-name:var(--font-oswald)]">
-              ● Corner Cam
-            </div>
-          </SlamIn>
-          <SlamIn variant="sweep-right" delay={150} className="flex-1">
-            <p className="text-[13px] sm:text-[14px] text-white/80 italic font-[family-name:var(--font-barlow)] tracking-wide">
-              &ldquo;Thirty-eight windows. Most people would say that&apos;s not a
-              dataset, that&apos;s a rounding error. But with the right
-              backbone...&rdquo;
-            </p>
-          </SlamIn>
-        </div>
-      </section>
-
-      {/* ══════════════════════════════════════════════════════════════ */}
       {/* THREE ROUNDS — Pipeline with slam-in numerals                   */}
       {/* ══════════════════════════════════════════════════════════════ */}
-      <section className="sticky top-0 min-h-screen bg-black flex items-center overflow-hidden relative px-5">
-        <div className="max-w-[1100px] mx-auto w-full">
-          <SlamIn variant="sweep" delay={0}>
-            <div className="text-center mb-4">
-              <div className="inline-flex items-center gap-3 text-[9px] font-black tracking-[6px] uppercase text-[#f59e0b] font-[family-name:var(--font-oswald)]">
-                <span className="w-8 h-px bg-[#f59e0b]" />
-                <span>⟨ The Pipeline ⟩</span>
-                <span className="w-8 h-px bg-[#f59e0b]" />
+      <section className="sticky top-0 min-h-screen mt-16 bg-[#0a0000] flex items-center overflow-hidden relative px-5">
+        <div className="max-w-[1100px] mx-auto w-full relative border-2 border-white/10 p-6 sm:p-10">
+          {/* Corner marks */}
+          <div className="absolute -top-px -left-px w-6 h-6 border-l-[3px] border-t-[3px] border-[#f59e0b]" />
+          <div className="absolute -top-px -right-px w-6 h-6 border-r-[3px] border-t-[3px] border-[#f59e0b]" />
+          <div className="absolute -bottom-px -left-px w-6 h-6 border-l-[3px] border-b-[3px] border-[#f59e0b]" />
+          <div className="absolute -bottom-px -right-px w-6 h-6 border-r-[3px] border-b-[3px] border-[#f59e0b]" />
+
+          {/* Fight card header */}
+          <div className="text-center mb-2">
+            <SlamIn variant="sweep" delay={0}>
+              <div className="text-[9px] font-black tracking-[6px] uppercase text-[#f59e0b] mb-4 font-[family-name:var(--font-oswald)]">
+                ● Main Card · Bout 02 ●
               </div>
+            </SlamIn>
+            <div className="flex items-center justify-center gap-3 mb-5">
+              <div className="w-12 h-[2px] bg-[#dc2626]" />
+              <div className="w-1.5 h-1.5 rotate-45 bg-[#dc2626]" />
+              <div className="w-12 h-[2px] bg-[#dc2626]" />
             </div>
-          </SlamIn>
+          </div>
+
           <SlamIn variant="slam" delay={150}>
             <div className="text-center mb-4">
               <h2 className="text-[56px] sm:text-[88px] font-black tracking-[2px] uppercase leading-[0.9] text-white font-[family-name:var(--font-anton)]">
@@ -113,9 +104,10 @@ export default function Home() {
               </h2>
             </div>
           </SlamIn>
+
           <SlamIn variant="sweep" delay={300}>
-            <div className="text-center mb-16 text-[11px] font-black tracking-[4px] uppercase text-white/50 font-[family-name:var(--font-oswald)]">
-              ▸ Broadcast → Fighter Isolation → Per-Window Call ▸
+            <div className="text-center mb-8 text-[11px] font-black tracking-[4px] uppercase text-white/40 font-[family-name:var(--font-oswald)]">
+              Segment · Annotate · Classify
             </div>
           </SlamIn>
 
@@ -154,10 +146,6 @@ export default function Home() {
             ].map((r, i) => (
               <SlamIn key={r.round} variant="slam" delay={i * 150}>
                 <div className="bg-black p-8 relative min-h-[340px] group h-full">
-                  {/* Bell icon */}
-                  <div className="absolute top-4 right-4 w-8 h-8 rounded-full bg-[#dc2626] flex items-center justify-center text-white text-[12px] font-black bell-pulse">
-                    ●
-                  </div>
                   {/* Round label */}
                   <div className="flex items-end gap-3 mb-4">
                     <div className="text-[88px] font-black leading-none text-[#dc2626] tabular-nums font-[family-name:var(--font-anton)] drop-shadow-[0_0_20px_rgba(220,38,38,0.4)]">
@@ -195,20 +183,41 @@ export default function Home() {
               </SlamIn>
             ))}
           </div>
+
+          {/* Bottom divider */}
+          <div className="flex items-center justify-center gap-3 mt-6">
+            <div className="w-12 h-[2px] bg-[#dc2626]" />
+            <div className="w-1.5 h-1.5 rotate-45 bg-[#dc2626]" />
+            <div className="w-12 h-[2px] bg-[#dc2626]" />
+          </div>
         </div>
       </section>
 
       {/* ══════════════════════════════════════════════════════════════ */}
       {/* 150MS — scroll-linked giant number + frame-pop cards            */}
       {/* ══════════════════════════════════════════════════════════════ */}
-      <section className="sticky top-0 min-h-screen bg-black flex items-center overflow-hidden relative px-5">
+      <section id="the-call" className="sticky top-0 min-h-screen mt-16 bg-black flex items-center overflow-hidden relative px-5">
         {/* Diagonal red slash background */}
         <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-[280px] bg-gradient-to-r from-transparent via-[#dc2626]/8 to-transparent skew-y-[-2deg] pointer-events-none" />
 
-        <div className="max-w-[1200px] mx-auto relative w-full">
+        <div className="max-w-[1200px] mx-auto relative w-full border-2 border-white/10 p-6 sm:p-10">
+          {/* Corner marks */}
+          <div className="absolute -top-px -left-px w-6 h-6 border-l-[3px] border-t-[3px] border-[#f59e0b]" />
+          <div className="absolute -top-px -right-px w-6 h-6 border-r-[3px] border-t-[3px] border-[#f59e0b]" />
+          <div className="absolute -bottom-px -left-px w-6 h-6 border-l-[3px] border-b-[3px] border-[#f59e0b]" />
+          <div className="absolute -bottom-px -right-px w-6 h-6 border-r-[3px] border-b-[3px] border-[#f59e0b]" />
+
+          {/* Fight card header */}
           <SlamIn variant="sweep" delay={0}>
-            <div className="text-center mb-12 text-[9px] font-black tracking-[6px] uppercase text-[#f59e0b] font-[family-name:var(--font-oswald)]">
-              ⟨ The Call ⟩
+            <div className="text-center mb-6">
+              <div className="text-[9px] font-black tracking-[6px] uppercase text-[#f59e0b] mb-3 font-[family-name:var(--font-oswald)]">
+                ● Main Event · Bout 03 ●
+              </div>
+              <div className="flex items-center justify-center gap-3">
+                <div className="w-12 h-[2px] bg-[#dc2626]" />
+                <div className="w-1.5 h-1.5 rotate-45 bg-[#dc2626]" />
+                <div className="w-12 h-[2px] bg-[#dc2626]" />
+              </div>
             </div>
           </SlamIn>
 
@@ -316,6 +325,13 @@ export default function Home() {
               </div>
             </SlamIn>
           </div>
+
+          {/* Bottom divider */}
+          <div className="flex items-center justify-center gap-3 mt-8">
+            <div className="w-12 h-[2px] bg-[#dc2626]" />
+            <div className="w-1.5 h-1.5 rotate-45 bg-[#dc2626]" />
+            <div className="w-12 h-[2px] bg-[#dc2626]" />
+          </div>
         </div>
       </section>
 
@@ -327,11 +343,25 @@ export default function Home() {
       {/* ══════════════════════════════════════════════════════════════ */}
       {/* REPLAY — Scroll-draw confidence curve                           */}
       {/* ══════════════════════════════════════════════════════════════ */}
-      <section className="sticky top-0 min-h-screen bg-black flex items-center overflow-hidden px-5">
-        <div className="max-w-[980px] mx-auto w-full">
+      <section className="sticky top-0 min-h-screen mt-16 bg-[#0a0000] flex items-center overflow-hidden px-5">
+        <div className="max-w-[980px] mx-auto w-full relative border-2 border-white/10 p-6 sm:p-10">
+          {/* Corner marks */}
+          <div className="absolute -top-px -left-px w-6 h-6 border-l-[3px] border-t-[3px] border-[#f59e0b]" />
+          <div className="absolute -top-px -right-px w-6 h-6 border-r-[3px] border-t-[3px] border-[#f59e0b]" />
+          <div className="absolute -bottom-px -left-px w-6 h-6 border-l-[3px] border-b-[3px] border-[#f59e0b]" />
+          <div className="absolute -bottom-px -right-px w-6 h-6 border-r-[3px] border-b-[3px] border-[#f59e0b]" />
+
+          {/* Fight card header */}
           <SlamIn variant="sweep" delay={0}>
-            <div className="text-center mb-3 text-[9px] font-black tracking-[6px] uppercase text-[#f59e0b] font-[family-name:var(--font-oswald)]">
-              ⟨ Replay ⟩
+            <div className="text-center mb-3">
+              <div className="text-[9px] font-black tracking-[6px] uppercase text-[#f59e0b] mb-3 font-[family-name:var(--font-oswald)]">
+                ● Replay · Bout 04 ●
+              </div>
+              <div className="flex items-center justify-center gap-3">
+                <div className="w-12 h-[2px] bg-[#dc2626]" />
+                <div className="w-1.5 h-1.5 rotate-45 bg-[#dc2626]" />
+                <div className="w-12 h-[2px] bg-[#dc2626]" />
+              </div>
             </div>
           </SlamIn>
           <SlamIn variant="slam" delay={150}>
@@ -426,11 +456,25 @@ export default function Home() {
       {/* ══════════════════════════════════════════════════════════════ */}
       {/* STEP INTO THE OCTAGON — Upload                                  */}
       {/* ══════════════════════════════════════════════════════════════ */}
-      <section className="sticky top-0 min-h-screen bg-black flex items-center overflow-hidden relative px-5">
-        <div className="max-w-[900px] mx-auto w-full">
+      <section className="sticky top-0 min-h-screen mt-16 bg-black flex items-center overflow-hidden relative px-5">
+        <div className="max-w-[900px] mx-auto w-full relative border-2 border-white/10 p-6 sm:p-10">
+          {/* Corner marks */}
+          <div className="absolute -top-px -left-px w-6 h-6 border-l-[3px] border-t-[3px] border-[#f59e0b]" />
+          <div className="absolute -top-px -right-px w-6 h-6 border-r-[3px] border-t-[3px] border-[#f59e0b]" />
+          <div className="absolute -bottom-px -left-px w-6 h-6 border-l-[3px] border-b-[3px] border-[#f59e0b]" />
+          <div className="absolute -bottom-px -right-px w-6 h-6 border-r-[3px] border-b-[3px] border-[#f59e0b]" />
+
+          {/* Fight card header */}
           <SlamIn variant="sweep" delay={0}>
-            <div className="text-center mb-3 text-[9px] font-black tracking-[6px] uppercase text-[#f59e0b] font-[family-name:var(--font-oswald)]">
-              ⟨ Your Turn ⟩
+            <div className="text-center mb-3">
+              <div className="text-[9px] font-black tracking-[6px] uppercase text-[#f59e0b] mb-3 font-[family-name:var(--font-oswald)]">
+                ● Your Turn · Bout 05 ●
+              </div>
+              <div className="flex items-center justify-center gap-3">
+                <div className="w-12 h-[2px] bg-[#dc2626]" />
+                <div className="w-1.5 h-1.5 rotate-45 bg-[#dc2626]" />
+                <div className="w-12 h-[2px] bg-[#dc2626]" />
+              </div>
             </div>
           </SlamIn>
           <SlamIn variant="slam" delay={150}>
@@ -458,7 +502,7 @@ export default function Home() {
       {/* ══════════════════════════════════════════════════════════════ */}
       {/* END OF CARD — Footer                                            */}
       {/* ══════════════════════════════════════════════════════════════ */}
-      <footer className="border-t-[3px] border-[#dc2626] bg-[#0a0000] relative overflow-hidden">
+      <footer id="footer" className="border-t-[3px] border-[#dc2626] bg-[#0a0000] relative overflow-hidden">
         {/* Diagonal banner */}
         <div className="absolute -top-6 inset-x-0 h-10 bg-[#dc2626] skew-y-[-2deg]" />
 

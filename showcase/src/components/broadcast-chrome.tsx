@@ -34,7 +34,8 @@ export function BroadcastChrome() {
       gsap.to(el, { y: "-100%", opacity: 0, duration: 0.4, ease: "power2.in" });
 
     const weighIn = document.getElementById("weigh-in");
-    const filmRoom = document.getElementById("film-room");
+    const theCall = document.getElementById("the-call");
+    const footer = document.getElementById("footer");
 
     const triggers: ScrollTrigger[] = [];
 
@@ -49,16 +50,24 @@ export function BroadcastChrome() {
       );
     }
 
-    if (filmRoom) {
+    if (theCall) {
       triggers.push(
         ScrollTrigger.create({
-          trigger: filmRoom,
-          start: "top top",
-          end: "bottom bottom",
+          trigger: theCall,
+          start: "top bottom",
           onEnter: hide,
-          onLeave: show,
-          onEnterBack: hide,
           onLeaveBack: show,
+        })
+      );
+    }
+
+    if (footer) {
+      triggers.push(
+        ScrollTrigger.create({
+          trigger: footer,
+          start: "top bottom",
+          onEnter: show,
+          onLeaveBack: hide,
         })
       );
     }

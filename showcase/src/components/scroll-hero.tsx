@@ -3,12 +3,12 @@
 import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { demoClips } from "@/lib/demo-data";
+import { heroClip } from "@/lib/demo-data";
 import { framePath, getConfidence, getPrediction } from "@/lib/player-utils";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const clip = demoClips[0]; // knockdown sequence
+const clip = heroClip; // SAM2-masked knockdown sequence
 
 export function ScrollHero() {
   const containerRef = useRef<HTMLDivElement>(null);

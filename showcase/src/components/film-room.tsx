@@ -4,11 +4,12 @@ import { useEffect, useRef, useState } from "react";
 import { demoClips } from "@/lib/demo-data";
 import { framePath, getConfidence, getPrediction } from "@/lib/player-utils";
 
-type Props = { clipIdx: number };
+type Props = { clipIdx: number; onClipChange?: (idx: number) => void };
 
-export function FilmRoom({ clipIdx }: Props) {
+export function FilmRoom({ clipIdx, onClipChange }: Props) {
   const [frameIdx, setFrameIdx] = useState(0);
   const [loaded, setLoaded] = useState(false);
+  const [playing, setPlaying] = useState(true);
 
   const clip = demoClips[clipIdx];
   const { totalFrames, fps, windowSize, predictions, frameDir, name } = clip;
@@ -80,7 +81,7 @@ export function FilmRoom({ clipIdx }: Props) {
 
   // Auto-playback loop
   useEffect(() => {
-    if (!loaded) return;
+    if (!loaded || !playing) return;
     let rafId: number;
     let last = performance.now();
     const frameInterval = 1000 / fps;
@@ -94,7 +95,7 @@ export function FilmRoom({ clipIdx }: Props) {
     };
     rafId = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(rafId);
-  }, [loaded, fps, totalFrames]);
+  }, [loaded, playing, fps, totalFrames]);
 
   const confidence = getConfidence(frameIdx, predictions, windowSize);
   const prediction = getPrediction(frameIdx, predictions, windowSize);
@@ -114,32 +115,21 @@ export function FilmRoom({ clipIdx }: Props) {
             Watch the model call the fight
           </h2>
         </div>
-        <div className="flex items-center gap-4">
-          <div className="hidden sm:flex flex-col items-center gap-1">
-            {demoClips.map((_, i) => (
-              <div
-                key={i}
-                className="w-6 h-[2px] transition-colors"
-                style={{
-                  background: i === clipIdx ? "#dc2626" : "rgba(255,255,255,0.2)",
-                }}
-              />
-            ))}
-          </div>
-          <div className="text-right">
-            <div className="text-[8px] font-mono tracking-[3px] uppercase text-white/40">
-              Clip {String(clipIdx + 1).padStart(2, "0")} · Of 03
-            </div>
-            <div
-              key={name}
-              className="text-[22px] sm:text-[26px] font-black tracking-[3px] uppercase text-[#dc2626] font-[family-name:var(--font-oswald)] leading-none animate-name-pop"
+        <div className="flex items-center gap-3">
+          {demoClips.map((c, i) => (
+            <button
+              key={c.id}
+              onClick={() => onClipChange?.(i)}
+              className="text-[10px] sm:text-[11px] font-black tracking-[3px] uppercase font-[family-name:var(--font-oswald)] px-2.5 py-1 transition-all duration-200 cursor-pointer"
+              style={{
+                background: i === clipIdx ? "#dc2626" : "transparent",
+                color: i === clipIdx ? "#fff" : "rgba(255,255,255,0.4)",
+                border: i === clipIdx ? "1px solid #dc2626" : "1px solid rgba(255,255,255,0.15)",
+              }}
             >
-              {name}
-            </div>
-          </div>
-          <div className="hidden md:block text-[8px] font-mono tracking-[3px] uppercase text-white/25 max-w-[80px]">
-            scroll ↓ next clip
-          </div>
+              {c.name}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -296,9 +286,10 @@ export function FilmRoom({ clipIdx }: Props) {
                 return (
                   <div
                     key={i}
-                    className="flex-1 relative"
+                    className="flex-1 relative cursor-pointer"
                     style={{ height: "100%" }}
                     title={`W${i} · ${p.confidence.toFixed(3)}`}
+                    onClick={() => setFrameIdx(i * windowSize)}
                   >
                     <div
                       className="absolute bottom-0 left-0 right-0 transition-all duration-100"
@@ -330,17 +321,54 @@ export function FilmRoom({ clipIdx }: Props) {
 
           {/* Playback progress bar */}
           <div className="flex items-center gap-3 px-3 py-1.5 border-t-2 border-[#dc2626]/40 bg-[#dc2626]/10 flex-shrink-0">
-            <span className="text-[9px] font-mono tracking-[2px] uppercase text-[#f59e0b]">
-              AUTO · PLAY
-            </span>
-            <div className="flex-1 relative h-1.5 bg-white/10">
+            <button
+              onClick={() => setPlaying((p) => !p)}
+              className="text-[9px] font-mono tracking-[2px] uppercase text-[#f59e0b] cursor-pointer hover:text-white transition-colors flex items-center gap-1.5"
+            >
+              {playing ? (
+                <>
+                  <svg width="8" height="10" viewBox="0 0 8 10" fill="currentColor"><rect width="2.5" height="10" /><rect x="5.5" width="2.5" height="10" /></svg>
+                  PLAYING
+                </>
+              ) : (
+                <>
+                  <svg width="8" height="10" viewBox="0 0 8 10" fill="currentColor"><path d="M0 0l8 5-8 5z" /></svg>
+                  PAUSED
+                </>
+              )}
+            </button>
+            <div
+              className="flex-1 relative h-4 cursor-pointer group"
+              onClick={(e) => {
+                const rect = e.currentTarget.getBoundingClientRect();
+                const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+                setFrameIdx(Math.round(pct * (totalFrames - 1)));
+              }}
+              onMouseDown={(e) => {
+                setPlaying(false);
+                const bar = e.currentTarget;
+                const seek = (ev: MouseEvent) => {
+                  const rect = bar.getBoundingClientRect();
+                  const pct = Math.max(0, Math.min(1, (ev.clientX - rect.left) / rect.width));
+                  setFrameIdx(Math.round(pct * (totalFrames - 1)));
+                };
+                const stop = () => {
+                  window.removeEventListener("mousemove", seek);
+                  window.removeEventListener("mouseup", stop);
+                };
+                window.addEventListener("mousemove", seek);
+                window.addEventListener("mouseup", stop);
+              }}
+            >
+              <div className="absolute inset-y-[6px] left-0 right-0 bg-white/10">
+                <div
+                  className="absolute inset-y-0 left-0 bg-[#dc2626]"
+                  style={{ width: `${progress * 100}%` }}
+                />
+              </div>
               <div
-                className="absolute inset-y-0 left-0 bg-[#dc2626] transition-[width] duration-75"
-                style={{ width: `${progress * 100}%` }}
-              />
-              <div
-                className="absolute top-1/2 -translate-y-1/2 w-2.5 h-2.5 bg-[#f59e0b] rounded-full shadow-[0_0_8px_rgba(245,158,11,0.8)]"
-                style={{ left: `calc(${progress * 100}% - 5px)` }}
+                className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-[#f59e0b] rounded-full shadow-[0_0_8px_rgba(245,158,11,0.8)] group-hover:scale-125 transition-transform"
+                style={{ left: `calc(${progress * 100}% - 6px)` }}
               />
             </div>
             <div className="text-[10px] font-mono tabular-nums tracking-[2px] text-white/70 whitespace-nowrap">

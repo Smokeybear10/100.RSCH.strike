@@ -42,6 +42,17 @@ const pressurePattern = [
   0.21, 0.15, 0.12, 0.09, 0.11, 0.08, 0.13, 0.10, 0.07, 0.11,
 ];
 
+// SAM2-masked version for the hero scroll sequence
+export const heroClip: Clip = {
+  id: "knockdown-masked",
+  name: "Knockdown",
+  totalFrames: 200,
+  fps: 12,
+  windowSize: 5,
+  predictions: generatePredictions(200, 5, knockdownPattern),
+  frameDir: "/clips/knockdown-masked",
+};
+
 export const demoClips: Clip[] = [
   {
     id: "knockdown",

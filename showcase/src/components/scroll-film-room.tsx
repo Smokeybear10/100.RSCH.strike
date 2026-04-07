@@ -51,7 +51,7 @@ export function ScrollFilmRoom() {
     >
       <div className="sticky top-0 h-screen flex items-center justify-center overflow-hidden">
         <div className="h-[80vh] w-full">
-          <FilmRoom clipIdx={clipIdx} />
+          <FilmRoom clipIdx={clipIdx} onClipChange={setClipIdx} />
         </div>
       </div>
     </section>
