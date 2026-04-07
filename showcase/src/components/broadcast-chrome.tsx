@@ -43,7 +43,7 @@ export function BroadcastChrome() {
       triggers.push(
         ScrollTrigger.create({
           trigger: weighIn,
-          start: "top bottom",
+          start: "top top",
           onEnter: show,
           onLeaveBack: hide,
         })
@@ -54,7 +54,7 @@ export function BroadcastChrome() {
       triggers.push(
         ScrollTrigger.create({
           trigger: theCall,
-          start: "top bottom",
+          start: "top top",
           onEnter: hide,
           onLeaveBack: show,
         })

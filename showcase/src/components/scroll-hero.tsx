@@ -142,7 +142,7 @@ export function ScrollHero() {
         }
       );
 
-      // Outro text — last 15%
+      // Outro text — appears earlier
       gsap.fromTo(
         outroRef.current,
         { opacity: 0, y: 40 },
@@ -152,8 +152,8 @@ export function ScrollHero() {
           ease: "power2.out",
           scrollTrigger: {
             trigger: container,
-            start: "80% top",
-            end: "95% top",
+            start: "78% top",
+            end: "88% top",
             scrub: true,
           },
         }
@@ -168,7 +168,7 @@ export function ScrollHero() {
   return (
     <section
       ref={containerRef}
-      className="relative h-[300vh] bg-black"
+      className="relative h-[450vh] bg-black"
       aria-label="Strike detection scroll sequence"
     >
       <div className="sticky top-0 h-screen overflow-hidden">

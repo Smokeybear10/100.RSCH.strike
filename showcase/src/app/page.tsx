@@ -71,7 +71,7 @@ export default function Home() {
       {/* ══════════════════════════════════════════════════════════════ */}
       {/* THREE ROUNDS — Pipeline with slam-in numerals                   */}
       {/* ══════════════════════════════════════════════════════════════ */}
-      <section className="sticky top-0 min-h-screen mt-16 bg-[#0a0000] flex items-center overflow-hidden relative px-5">
+      <section className="sticky top-0 min-h-screen mt-[30vh] bg-[#0a0000] flex items-center overflow-hidden relative px-5">
         <div className="max-w-[1100px] mx-auto w-full relative border-2 border-white/10 p-6 sm:p-10">
           {/* Corner marks */}
           <div className="absolute -top-px -left-px w-6 h-6 border-l-[3px] border-t-[3px] border-[#f59e0b]" />
@@ -196,7 +196,7 @@ export default function Home() {
       {/* ══════════════════════════════════════════════════════════════ */}
       {/* 150MS — scroll-linked giant number + frame-pop cards            */}
       {/* ══════════════════════════════════════════════════════════════ */}
-      <section id="the-call" className="sticky top-0 min-h-screen mt-16 bg-black flex items-center overflow-hidden relative px-5">
+      <section id="the-call" className="sticky top-0 min-h-screen mt-[30vh] bg-black flex items-center overflow-hidden relative px-5">
         {/* Diagonal red slash background */}
         <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-[280px] bg-gradient-to-r from-transparent via-[#dc2626]/8 to-transparent skew-y-[-2deg] pointer-events-none" />
 
@@ -343,7 +343,7 @@ export default function Home() {
       {/* ══════════════════════════════════════════════════════════════ */}
       {/* REPLAY — Scroll-draw confidence curve                           */}
       {/* ══════════════════════════════════════════════════════════════ */}
-      <section className="sticky top-0 min-h-screen mt-16 bg-[#0a0000] flex items-center overflow-hidden px-5">
+      <section className="sticky top-0 z-10 min-h-screen -mt-[100vh] bg-[#0a0000] flex items-center overflow-hidden px-5">
         <div className="max-w-[980px] mx-auto w-full relative border-2 border-white/10 p-6 sm:p-10">
           {/* Corner marks */}
           <div className="absolute -top-px -left-px w-6 h-6 border-l-[3px] border-t-[3px] border-[#f59e0b]" />
@@ -364,86 +364,82 @@ export default function Home() {
               </div>
             </div>
           </SlamIn>
+
           <SlamIn variant="slam" delay={150}>
-            <h2 className="text-center text-[44px] sm:text-[64px] font-black tracking-[2px] uppercase leading-[1.05] text-white font-[family-name:var(--font-anton)]">
-              The line above the player?
+            <h2 className="text-center text-[44px] sm:text-[64px] font-black tracking-[2px] uppercase leading-[0.95] text-white font-[family-name:var(--font-anton)] mb-2">
+              Every 5 Frames.
               <br />
               <span className="text-[#dc2626] drop-shadow-[0_0_20px_rgba(220,38,38,0.4)]">
-                That&apos;s this. Every 5 frames.
+                One Confidence Score.
               </span>
             </h2>
           </SlamIn>
 
+          {/* Confidence curve */}
           <SlamIn variant="clip-reveal" delay={300}>
-            <div className="mt-14 border-[3px] border-[#dc2626] bg-[#0a0000] p-6 shadow-[0_0_40px_rgba(220,38,38,0.2)]">
-              {/* Scorecard header */}
-              <div className="flex items-center justify-between mb-4 pb-3 border-b-2 border-[#dc2626]/40">
-                <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-[#f59e0b] live-dot" />
-                  <span className="text-[10px] font-black tracking-[3px] uppercase text-[#f59e0b] font-[family-name:var(--font-oswald)]">
-                    Round-By-Round Scorecard
-                  </span>
+            <div className="mt-8">
+              {/* Chart area */}
+              <div className="relative">
+                {/* Y-axis labels */}
+                <div className="absolute -left-1 top-0 bottom-0 flex flex-col justify-between text-[7px] font-mono text-white/30 -translate-x-full pr-2">
+                  <span>1.0</span>
+                  <span>0.5</span>
+                  <span>0.0</span>
                 </div>
-                <span className="text-[9px] font-mono tracking-[2px] text-white/60">
-                  38 WINDOWS · 190 FRAMES
-                </span>
+
+                <svg viewBox="0 0 100 40" className="w-full h-40 sm:h-48">
+                  <defs>
+                    <linearGradient id="replay-grad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.4" />
+                      <stop offset="100%" stopColor="#dc2626" stopOpacity="0" />
+                    </linearGradient>
+                  </defs>
+                  {/* Threshold line at 0.5 */}
+                  <line x1="0" y1="20" x2="100" y2="20" stroke="#dc2626" strokeWidth="0.3" strokeDasharray="2,2" vectorEffect="non-scaling-stroke" />
+                  {/* Fill */}
+                  <polygon
+                    points="0,40 0,33 5,30 10,26 15,23 20,17 25,12 30,6 33,3 36,1 40,5 44,12 48,20 52,16 56,10 60,4 64,9 68,17 72,26 76,33 80,36 84,38 88,39 92,37 96,36 100,35 100,40"
+                    fill="url(#replay-grad)"
+                  />
+                  {/* Line */}
+                  <polyline
+                    className="scroll-draw-path"
+                    points="0,33 5,30 10,26 15,23 20,17 25,12 30,6 33,3 36,1 40,5 44,12 48,20 52,16 56,10 60,4 64,9 68,17 72,26 76,33 80,36 84,38 88,39 92,37 96,36 100,35"
+                    fill="none"
+                    stroke="#f59e0b"
+                    strokeWidth="1.2"
+                    vectorEffect="non-scaling-stroke"
+                  />
+                  {/* Peak dots */}
+                  <circle cx="36" cy="1" r="0.8" fill="#dc2626" />
+                  <circle cx="60" cy="4" r="0.8" fill="#dc2626" />
+                </svg>
               </div>
 
-              <svg
-                viewBox="0 0 100 32"
-                className="w-full h-32"
-                preserveAspectRatio="none"
-              >
-                <defs>
-                  <linearGradient id="fc-grad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.6" />
-                    <stop offset="100%" stopColor="#dc2626" stopOpacity="0" />
-                  </linearGradient>
-                </defs>
-                {/* Grid */}
-                <line x1="0" y1="8" x2="100" y2="8" stroke="#dc2626" strokeWidth="0.15" strokeDasharray="1,2" vectorEffect="non-scaling-stroke" opacity="0.3" />
-                <line x1="0" y1="16" x2="100" y2="16" stroke="#dc2626" strokeWidth="0.4" strokeDasharray="2,2" vectorEffect="non-scaling-stroke" />
-                <line x1="0" y1="24" x2="100" y2="24" stroke="#dc2626" strokeWidth="0.15" strokeDasharray="1,2" vectorEffect="non-scaling-stroke" opacity="0.3" />
-                <polygon
-                  points="0,32 0,26 5,24 10,21 15,18 20,14 25,10 30,5 33,2 36,1 40,4 44,10 48,16 52,13 56,8 60,3 64,7 68,14 72,21 76,26 80,29 84,30 88,31 92,30 96,29 100,28 100,32"
-                  fill="url(#fc-grad)"
-                />
-                <polyline
-                  className="scroll-draw-path"
-                  points="0,26 5,24 10,21 15,18 20,14 25,10 30,5 33,2 36,1 40,4 44,10 48,16 52,13 56,8 60,3 64,7 68,14 72,21 76,26 80,29 84,30 88,31 92,30 96,29 100,28"
-                  fill="none"
-                  stroke="#f59e0b"
-                  strokeWidth="0.9"
-                  vectorEffect="non-scaling-stroke"
-                />
-                {/* Peak markers */}
-                <circle cx="36" cy="1" r="0.8" fill="#dc2626" vectorEffect="non-scaling-stroke" className="animate-dot-pop" style={{ animationDelay: "1200ms" }} />
-                <circle cx="60" cy="3" r="0.8" fill="#dc2626" vectorEffect="non-scaling-stroke" className="animate-dot-pop" style={{ animationDelay: "1500ms" }} />
-              </svg>
-
-              {/* Axis + stats */}
-              <div className="mt-3 pt-3 border-t border-[#dc2626]/40 grid grid-cols-4 gap-4 text-[9px] font-mono tracking-[2px] uppercase">
+              {/* Stats row */}
+              <div className="mt-4 pt-4 border-t border-white/10 grid grid-cols-4 gap-6">
                 <div>
-                  <div className="text-white/50 text-[8px]">Peak</div>
-                  <div className="font-black text-[#f59e0b] text-[20px] font-[family-name:var(--font-oswald)] leading-none mt-0.5">
+                  <div className="text-[8px] font-mono tracking-[2px] uppercase text-white/40 mb-1">Peak</div>
+                  <div className="text-[24px] font-black text-[#f59e0b] font-[family-name:var(--font-anton)] leading-none">
                     <CountUp target={0.947} decimals={3} duration={1800} />
                   </div>
                 </div>
                 <div>
-                  <div className="text-white/50 text-[8px]">Threshold</div>
-                  <div className="font-black text-white text-[20px] font-[family-name:var(--font-oswald)] leading-none mt-0.5">
-                    <CountUp target={0.5} decimals={3} duration={1400} />
+                  <div className="text-[8px] font-mono tracking-[2px] uppercase text-white/40 mb-1">Threshold</div>
+                  <div className="text-[24px] font-black text-white/70 font-[family-name:var(--font-anton)] leading-none">
+                    <CountUp target={0.500} decimals={3} duration={1400} />
                   </div>
                 </div>
                 <div>
-                  <div className="text-white/50 text-[8px]">Hits</div>
-                  <div className="font-black text-[#dc2626] text-[20px] font-[family-name:var(--font-oswald)] leading-none mt-0.5">
-                    <CountUp target={7} duration={1200} /> / 38
+                  <div className="text-[8px] font-mono tracking-[2px] uppercase text-white/40 mb-1">Strikes</div>
+                  <div className="text-[24px] font-black text-[#dc2626] font-[family-name:var(--font-anton)] leading-none">
+                    <CountUp target={7} duration={1200} />
+                    <span className="text-[14px] text-white/30"> / 38</span>
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-white/50 text-[8px]">Decision</div>
-                  <div className="font-black text-[#dc2626] text-[20px] font-[family-name:var(--font-oswald)] leading-none mt-0.5">
+                  <div className="text-[8px] font-mono tracking-[2px] uppercase text-white/40 mb-1">Decision</div>
+                  <div className="text-[24px] font-black text-[#dc2626] font-[family-name:var(--font-anton)] leading-none">
                     KO · R2
                   </div>
                 </div>
@@ -456,7 +452,7 @@ export default function Home() {
       {/* ══════════════════════════════════════════════════════════════ */}
       {/* STEP INTO THE OCTAGON — Upload                                  */}
       {/* ══════════════════════════════════════════════════════════════ */}
-      <section className="sticky top-0 min-h-screen mt-16 bg-black flex items-center overflow-hidden relative px-5">
+      <section className="sticky top-0 z-10 min-h-screen mt-[30vh] bg-black flex items-center overflow-hidden relative px-5">
         <div className="max-w-[900px] mx-auto w-full relative border-2 border-white/10 p-6 sm:p-10">
           {/* Corner marks */}
           <div className="absolute -top-px -left-px w-6 h-6 border-l-[3px] border-t-[3px] border-[#f59e0b]" />
@@ -502,7 +498,7 @@ export default function Home() {
       {/* ══════════════════════════════════════════════════════════════ */}
       {/* END OF CARD — Footer                                            */}
       {/* ══════════════════════════════════════════════════════════════ */}
-      <footer id="footer" className="border-t-[3px] border-[#dc2626] bg-[#0a0000] relative overflow-hidden">
+      <footer id="footer" className="relative z-10 border-t-[3px] border-[#dc2626] bg-[#0a0000] overflow-hidden mt-[30vh]">
         {/* Diagonal banner */}
         <div className="absolute -top-6 inset-x-0 h-10 bg-[#dc2626] skew-y-[-2deg]" />
 

@@ -11,14 +11,16 @@ gsap.registerPlugin(ScrollTrigger);
 export function ScrollFilmRoom() {
   const containerRef = useRef<HTMLElement>(null);
   const [clipIdx, setClipIdx] = useState(0);
+  const [clipProgress, setClipProgress] = useState(0);
 
   useEffect(() => {
     const ctx = gsap.context(() => {
       const container = containerRef.current;
       if (!container) return;
 
-      // Map scroll progress to clip index.
-      // 3 clips, divide the scroll range into thirds.
+      // Weighted clip ranges: Knockdown 25%, Exchange 25%, Pressure 50%
+      const clipRanges = [0, 0.25, 0.50, 1.0];
+
       const proxy = { progress: 0 };
       gsap.to(proxy, {
         progress: 1,
@@ -29,11 +31,16 @@ export function ScrollFilmRoom() {
           end: "bottom bottom",
           scrub: true,
           onUpdate: (self) => {
-            const idx = Math.min(
-              demoClips.length - 1,
-              Math.floor(self.progress * demoClips.length)
-            );
+            const p = self.progress;
+            let idx = 0;
+            for (let i = 0; i < clipRanges.length - 1; i++) {
+              if (p >= clipRanges[i]) idx = i;
+            }
+            idx = Math.min(demoClips.length - 1, idx);
             setClipIdx(idx);
+            const rangeStart = clipRanges[idx];
+            const rangeEnd = clipRanges[idx + 1];
+            setClipProgress((p - rangeStart) / (rangeEnd - rangeStart));
           },
         },
       });
@@ -46,12 +53,12 @@ export function ScrollFilmRoom() {
     <section
       id="film-room"
       ref={containerRef}
-      className="relative h-[300vh] bg-black"
+      className="relative h-[450vh] bg-black"
       aria-label="Film Room — live inference demo"
     >
       <div className="sticky top-0 h-screen flex items-center justify-center overflow-hidden">
         <div className="h-[80vh] w-full">
-          <FilmRoom clipIdx={clipIdx} onClipChange={setClipIdx} />
+          <FilmRoom clipIdx={clipIdx} onClipChange={setClipIdx} clipProgress={clipProgress} />
         </div>
       </div>
     </section>

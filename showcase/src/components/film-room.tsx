@@ -4,12 +4,20 @@ import { useEffect, useRef, useState } from "react";
 import { demoClips } from "@/lib/demo-data";
 import { framePath, getConfidence, getPrediction } from "@/lib/player-utils";
 
-type Props = { clipIdx: number; onClipChange?: (idx: number) => void };
+type Props = { clipIdx: number; onClipChange?: (idx: number) => void; clipProgress?: number };
 
-export function FilmRoom({ clipIdx, onClipChange }: Props) {
+export function FilmRoom({ clipIdx, onClipChange, clipProgress = 0 }: Props) {
   const [frameIdx, setFrameIdx] = useState(0);
   const [loaded, setLoaded] = useState(false);
   const [playing, setPlaying] = useState(true);
+  const [hovering, setHovering] = useState(false);
+
+  // Clip name visible for first 30% of each clip's scroll, then fades out over next 10%
+  const nameOpacity = clipProgress < 0.30
+    ? 1
+    : clipProgress < 0.40
+      ? 1 - (clipProgress - 0.30) / 0.10
+      : 0;
 
   const clip = demoClips[clipIdx];
   const { totalFrames, fps, windowSize, predictions, frameDir, name } = clip;
@@ -152,7 +160,12 @@ export function FilmRoom({ clipIdx, onClipChange }: Props) {
           {/* Video + telemetry split */}
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_200px] min-h-0 flex-1">
             {/* Canvas */}
-            <div className="relative bg-black overflow-hidden border-b-2 lg:border-b-0 lg:border-r-2 border-[#dc2626]/40 min-h-[280px] lg:min-h-0">
+            <div
+              className="relative bg-black overflow-hidden border-b-2 lg:border-b-0 lg:border-r-2 border-[#dc2626]/40 min-h-[280px] lg:min-h-0 cursor-pointer"
+              onMouseEnter={() => setHovering(true)}
+              onMouseLeave={() => setHovering(false)}
+              onClick={() => setPlaying((p) => !p)}
+            >
               <canvas
                 ref={canvasRef}
                 className="absolute inset-0 w-full h-full object-contain transition-[filter] duration-300"
@@ -191,9 +204,61 @@ export function FilmRoom({ clipIdx, onClipChange }: Props) {
                   {isStrike ? "● STRIKE" : "○ NEUTRAL"}
                 </div>
               </div>
+              {/* Clip name overlay — scroll-driven fade */}
+              <div
+                className="absolute inset-0 flex items-center justify-center pointer-events-none"
+                style={{ opacity: nameOpacity }}
+              >
+                <div className="flex flex-col items-center">
+                  <div className="text-[9px] font-black tracking-[6px] uppercase text-[#f59e0b] mb-2 font-[family-name:var(--font-oswald)]">
+                    ● Bout {String(clipIdx + 1).padStart(2, "0")} ●
+                  </div>
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-[2px] bg-[#dc2626]" />
+                    <div className="w-1.5 h-1.5 rotate-45 bg-[#dc2626]" />
+                    <div className="w-10 h-[2px] bg-[#dc2626]" />
+                  </div>
+                  <div
+                    className="text-[48px] sm:text-[64px] font-black tracking-[6px] uppercase text-white font-[family-name:var(--font-anton)] leading-none"
+                    style={{ textShadow: "0 0 40px rgba(220,38,38,0.6), 0 4px 20px rgba(0,0,0,0.9)" }}
+                  >
+                    {name}
+                  </div>
+                  <div className="flex items-center gap-3 mt-3">
+                    <div className="w-10 h-[2px] bg-[#dc2626]" />
+                    <div className="w-1.5 h-1.5 rotate-45 bg-[#dc2626]" />
+                    <div className="w-10 h-[2px] bg-[#dc2626]" />
+                  </div>
+                </div>
+              </div>
+              {/* Hover pause/play overlay */}
+              <div
+                className="absolute inset-0 flex items-center justify-center pointer-events-none transition-opacity duration-200"
+                style={{ opacity: hovering ? 1 : 0 }}
+              >
+                <div className="w-16 h-16 rounded-full bg-black/60 backdrop-blur-md border-2 border-white/20 flex items-center justify-center">
+                  {playing ? (
+                    <svg width="20" height="24" viewBox="0 0 20 24" fill="white">
+                      <rect width="6" height="24" />
+                      <rect x="14" width="6" height="24" />
+                    </svg>
+                  ) : (
+                    <svg width="20" height="24" viewBox="0 0 20 24" fill="white" className="ml-1">
+                      <path d="M0 0l20 12-20 12z" />
+                    </svg>
+                  )}
+                </div>
+              </div>
               {/* Frame counter overlay */}
               <div className="absolute bottom-3 left-3 text-[9px] font-mono tracking-[2px] uppercase text-white/70 bg-black/50 backdrop-blur-sm px-2 py-1">
                 F {String(frameIdx).padStart(3, "0")} / {totalFrames - 1}
+              </div>
+              {/* Hover hint */}
+              <div
+                className="absolute bottom-3 right-3 text-[8px] font-mono tracking-[2px] uppercase text-white/50 bg-black/50 backdrop-blur-sm px-2 py-1 transition-opacity duration-200"
+                style={{ opacity: hovering ? 1 : 0 }}
+              >
+                {playing ? "CLICK TO PAUSE" : "CLICK TO PLAY"}
               </div>
             </div>
 
