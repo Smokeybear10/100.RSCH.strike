@@ -201,7 +201,7 @@ export function ScrollHero() {
           className="absolute inset-0 flex flex-col items-center justify-center text-center px-5 pointer-events-none"
         >
           <div className="text-[10px] sm:text-[11px] font-mono tracking-[6px] uppercase text-white/40 mb-6">
-            Strike Detection · Frame-by-Frame
+            Strike Detection · Frame-by-Frame · By Thomas Ou
           </div>
           <h1 className="text-[clamp(80px,18vw,280px)] font-black leading-[0.82] tracking-[-0.02em] text-white font-[family-name:var(--font-anton)]">
             STR

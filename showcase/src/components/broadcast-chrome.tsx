@@ -28,19 +28,42 @@ export function BroadcastChrome() {
 
     gsap.set(el, { y: "-100%", opacity: 0 });
 
+    const show = () =>
+      gsap.to(el, { y: "0%", opacity: 1, duration: 0.5, ease: "power2.out" });
+    const hide = () =>
+      gsap.to(el, { y: "-100%", opacity: 0, duration: 0.4, ease: "power2.in" });
+
     const weighIn = document.getElementById("weigh-in");
-    if (!weighIn) return;
+    const filmRoom = document.getElementById("film-room");
 
-    const trigger = ScrollTrigger.create({
-      trigger: weighIn,
-      start: "top bottom",
-      onEnter: () =>
-        gsap.to(el, { y: "0%", opacity: 1, duration: 0.5, ease: "power2.out" }),
-      onLeaveBack: () =>
-        gsap.to(el, { y: "-100%", opacity: 0, duration: 0.4, ease: "power2.in" }),
-    });
+    const triggers: ScrollTrigger[] = [];
 
-    return () => trigger.kill();
+    if (weighIn) {
+      triggers.push(
+        ScrollTrigger.create({
+          trigger: weighIn,
+          start: "top bottom",
+          onEnter: show,
+          onLeaveBack: hide,
+        })
+      );
+    }
+
+    if (filmRoom) {
+      triggers.push(
+        ScrollTrigger.create({
+          trigger: filmRoom,
+          start: "top top",
+          end: "bottom bottom",
+          onEnter: hide,
+          onLeave: show,
+          onEnterBack: hide,
+          onLeaveBack: show,
+        })
+      );
+    }
+
+    return () => triggers.forEach((t) => t.kill());
   }, []);
 
   return (
@@ -65,6 +88,10 @@ export function BroadcastChrome() {
           </span>
           <span className="hidden sm:inline text-[9px] font-mono tracking-[2px] uppercase text-white/75">
             04 · 04 · 2025
+          </span>
+          <span className="hidden md:inline text-[9px] text-white/40 font-mono">●</span>
+          <span className="hidden md:inline text-[9px] font-mono tracking-[2px] uppercase text-white/75">
+            Thomas Ou
           </span>
         </div>
         <div className="text-[9px] sm:text-[10px] font-mono tracking-[2px] text-white/85">

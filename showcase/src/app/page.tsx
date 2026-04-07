@@ -1,5 +1,6 @@
 import { ScrollHero } from "@/components/scroll-hero";
 import { BroadcastChrome } from "@/components/broadcast-chrome";
+import { ScrollFilmRoom } from "@/components/scroll-film-room";
 import { FCCounter } from "@/components/fc-counter";
 import { FCUpload } from "@/components/fc-upload";
 import { SlamIn } from "@/components/slam-in";
@@ -317,6 +318,11 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* ══════════════════════════════════════════════════════════════ */}
+      {/* FILM ROOM — scroll-driven clip switching (3 clips × 1vh each)   */}
+      {/* ══════════════════════════════════════════════════════════════ */}
+      <ScrollFilmRoom />
 
       {/* ══════════════════════════════════════════════════════════════ */}
       {/* REPLAY — Scroll-draw confidence curve                           */}
