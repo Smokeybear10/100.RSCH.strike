@@ -9,6 +9,10 @@ __pycache__/
 *.pyc
 .ipynb_checkpoints/
 
+# Model checkpoints
+*.pt
+*.pth
+
 # OS
 .DS_Store
 .gstack/
