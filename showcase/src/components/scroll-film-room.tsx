@@ -18,8 +18,8 @@ export function ScrollFilmRoom() {
       const container = containerRef.current;
       if (!container) return;
 
-      // Weighted clip ranges: Knockdown 25%, Exchange 25%, Pressure 50%
-      const clipRanges = [0, 0.25, 0.50, 1.0];
+      // Weighted clip ranges: Knockdown 15%, Exchange 15%, Pressure 70%
+      const clipRanges = [0, 0.15, 0.30, 1.0];
 
       const proxy = { progress: 0 };
       gsap.to(proxy, {

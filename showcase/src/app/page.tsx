@@ -8,8 +8,8 @@ import { CountUp } from "@/components/count-up";
 
 const socialLinks = [
   { name: "GitHub", href: "https://github.com/Smokeybear10" },
-  { name: "LinkedIn", href: "https://linkedin.com" },
-  { name: "Website", href: "#" },
+  { name: "LinkedIn", href: "https://www.linkedin.com/in/thomasou0/" },
+  { name: "Website", href: "https://thomasou.com/" },
 ];
 
 export default function Home() {

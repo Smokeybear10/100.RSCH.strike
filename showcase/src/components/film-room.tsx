@@ -12,11 +12,11 @@ export function FilmRoom({ clipIdx, onClipChange, clipProgress = 0 }: Props) {
   const [playing, setPlaying] = useState(true);
   const [hovering, setHovering] = useState(false);
 
-  // Clip name visible for first 30% of each clip's scroll, then fades out over next 10%
-  const nameOpacity = clipProgress < 0.30
+  // Clip name visible for first 60% of each clip's scroll, then fades out over next 20%
+  const nameOpacity = clipProgress < 0.60
     ? 1
-    : clipProgress < 0.40
-      ? 1 - (clipProgress - 0.30) / 0.10
+    : clipProgress < 0.80
+      ? 1 - (clipProgress - 0.60) / 0.20
       : 0;
 
   const clip = demoClips[clipIdx];

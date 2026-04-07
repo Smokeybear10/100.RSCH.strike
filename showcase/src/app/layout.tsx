@@ -42,6 +42,13 @@ export default function RootLayout({
       lang="en"
       className={`${anton.variable} ${oswald.variable} ${barlow.variable} ${geistMono.variable} antialiased`}
     >
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `if("scrollRestoration"in history)history.scrollRestoration="manual";window.scrollTo(0,0);`,
+          }}
+        />
+      </head>
       <body>
         <SmoothScroll>{children}</SmoothScroll>
       </body>
