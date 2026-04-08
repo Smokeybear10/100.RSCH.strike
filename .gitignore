@@ -8,10 +8,16 @@
 __pycache__/
 *.pyc
 .ipynb_checkpoints/
+.venv
 
 # Model checkpoints
 *.pt
 *.pth
+
+# Node / Next.js
+node_modules
+.next
+*.tsbuildinfo
 
 # OS
 .DS_Store
