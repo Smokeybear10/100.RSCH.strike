@@ -3,12 +3,28 @@
 import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { heroClip } from "@/lib/demo-data";
+import { heroClips } from "@/lib/demo-data";
 import { framePath, getConfidence, getPrediction } from "@/lib/player-utils";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const clip = heroClip; // SAM2-masked knockdown sequence
+const ric = typeof window !== "undefined" && window.requestIdleCallback
+  ? window.requestIdleCallback
+  : (cb: () => void) => setTimeout(cb, 1) as unknown as number;
+
+const TOTAL_VIRTUAL_FRAMES = heroClips.reduce((sum, c) => sum + c.totalFrames, 0);
+
+function virtualToClip(virtualFrame: number) {
+  let remaining = virtualFrame;
+  for (let i = 0; i < heroClips.length; i++) {
+    if (remaining < heroClips[i].totalFrames) {
+      return { clipIndex: i, localFrame: remaining };
+    }
+    remaining -= heroClips[i].totalFrames;
+  }
+  const last = heroClips.length - 1;
+  return { clipIndex: last, localFrame: heroClips[last].totalFrames - 1 };
+}
 
 export function ScrollHero() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -17,28 +33,61 @@ export function ScrollHero() {
   const hudRef = useRef<HTMLDivElement>(null);
   const outroRef = useRef<HTMLDivElement>(null);
 
-  const imageCache = useRef<Map<number, HTMLImageElement>>(new Map());
-  const [currentFrame, setCurrentFrame] = useState(0);
+  const imageCache = useRef<Map<string, HTMLImageElement>>(new Map());
+  const canvasSizeRef = useRef({ w: 0, h: 0 });
+  const lastClipWindow = useRef({ clipIndex: -1, windowIndex: -1 });
+  const [virtualFrame, setVirtualFrame] = useState(0);
   const [loaded, setLoaded] = useState(false);
 
-  const { totalFrames, frameDir, windowSize, predictions } = clip;
-  const confidence = getConfidence(currentFrame, predictions, windowSize);
-  const prediction = getPrediction(currentFrame, predictions, windowSize);
+  const { clipIndex, localFrame } = virtualToClip(virtualFrame);
+  const clip = heroClips[clipIndex];
+  const { windowSize, predictions } = clip;
+  const confidence = getConfidence(localFrame, predictions, windowSize);
+  const prediction = getPrediction(localFrame, predictions, windowSize);
   const isStrike = prediction?.label === "strike";
-  const currentWindow = Math.floor(currentFrame / windowSize);
+  const currentWindow = Math.floor(localFrame / windowSize);
 
-  // Preload all frames aggressively — this is the cinematic hero, it must be smooth
+  const drawToCanvas = (vFrame: number) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    const { clipIndex: ci, localFrame: lf } = virtualToClip(vFrame);
+    const key = `${ci}-${lf}`;
+    const img = imageCache.current.get(key);
+    const draw = (image: HTMLImageElement) => {
+      if (canvasSizeRef.current.w !== image.naturalWidth || canvasSizeRef.current.h !== image.naturalHeight) {
+        canvas.width = image.naturalWidth;
+        canvas.height = image.naturalHeight;
+        canvasSizeRef.current = { w: image.naturalWidth, h: image.naturalHeight };
+      }
+      ctx.drawImage(image, 0, 0);
+    };
+    if (img) {
+      draw(img);
+    } else {
+      for (let offset = 1; offset < 20; offset++) {
+        const near = imageCache.current.get(`${ci}-${lf - offset}`) || imageCache.current.get(`${ci}-${lf + offset}`);
+        if (near) { draw(near); return; }
+      }
+    }
+  };
+
+  // Preload all frames for all clips
   useEffect(() => {
     const cache = imageCache.current;
     cache.clear();
     let loadedCount = 0;
-    const eager = Math.min(40, totalFrames);
+    const totalToLoad = TOTAL_VIRTUAL_FRAMES;
+    const eager = Math.min(60, totalToLoad);
 
-    const loadFrame = (i: number) => {
+    const loadFrame = (clipIdx: number, frameIdx: number) => {
+      const key = `${clipIdx}-${frameIdx}`;
+      if (cache.has(key)) return;
       const img = new Image();
-      img.src = framePath(frameDir, i);
+      img.src = framePath(heroClips[clipIdx].frameDir, frameIdx);
       img.onload = () => {
-        cache.set(i, img);
+        cache.set(key, img);
         loadedCount++;
         if (loadedCount >= eager) setLoaded(true);
       };
@@ -48,45 +97,35 @@ export function ScrollHero() {
       };
     };
 
-    for (let i = 0; i < eager; i++) loadFrame(i);
-
-    // Background-load the rest
-    let bg = eager;
-    const loadBatch = () => {
-      const end = Math.min(bg + 20, totalFrames);
-      for (let i = bg; i < end; i++) loadFrame(i);
-      bg = end;
-      if (bg < totalFrames) requestIdleCallback(loadBatch);
-    };
-    if (eager < totalFrames) requestIdleCallback(loadBatch);
-  }, [totalFrames, frameDir]);
-
-  // Draw frame to canvas
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-    const img = imageCache.current.get(currentFrame);
-    if (img) {
-      canvas.width = img.naturalWidth;
-      canvas.height = img.naturalHeight;
-      ctx.drawImage(img, 0, 0);
-    } else {
-      // Find nearest cached frame to avoid flash
-      for (let offset = 1; offset < 20; offset++) {
-        const near =
-          imageCache.current.get(currentFrame - offset) ||
-          imageCache.current.get(currentFrame + offset);
-        if (near) {
-          canvas.width = near.naturalWidth;
-          canvas.height = near.naturalHeight;
-          ctx.drawImage(near, 0, 0);
-          return;
-        }
+    // Eagerly load first N frames across clips
+    let count = 0;
+    for (let ci = 0; ci < heroClips.length && count < eager; ci++) {
+      const framesFromThis = Math.min(heroClips[ci].totalFrames, eager - count);
+      for (let fi = 0; fi < framesFromThis; fi++) {
+        loadFrame(ci, fi);
+        count++;
       }
     }
-  }, [currentFrame]);
+
+    // Background-load the rest
+    const loadRemaining = () => {
+      let batch = 0;
+      for (let ci = 0; ci < heroClips.length; ci++) {
+        for (let fi = 0; fi < heroClips[ci].totalFrames; fi++) {
+          const key = `${ci}-${fi}`;
+          if (!cache.has(key)) {
+            loadFrame(ci, fi);
+            batch++;
+            if (batch >= 20) {
+              ric(loadRemaining);
+              return;
+            }
+          }
+        }
+      }
+    };
+    ric(loadRemaining);
+  }, []);
 
   // Scroll orchestration
   useEffect(() => {
@@ -94,10 +133,9 @@ export function ScrollHero() {
       const container = containerRef.current;
       if (!container) return;
 
-      // Frame scrubber — scroll drives currentFrame via a proxy object
       const proxy = { frame: 0 };
       gsap.to(proxy, {
-        frame: totalFrames - 1,
+        frame: TOTAL_VIRTUAL_FRAMES - 1,
         ease: "none",
         scrollTrigger: {
           trigger: container,
@@ -105,12 +143,19 @@ export function ScrollHero() {
           end: "bottom bottom",
           scrub: 0.5,
           onUpdate: () => {
-            setCurrentFrame(Math.round(proxy.frame));
+            const vf = Math.round(proxy.frame);
+            drawToCanvas(vf);
+            const { clipIndex: ci, localFrame: lf } = virtualToClip(vf);
+            const wi = Math.floor(lf / heroClips[ci].windowSize);
+            if (ci !== lastClipWindow.current.clipIndex || wi !== lastClipWindow.current.windowIndex) {
+              lastClipWindow.current = { clipIndex: ci, windowIndex: wi };
+              setVirtualFrame(vf);
+            }
           },
         },
       });
 
-      // Title fade — first 15% of scroll
+      // Title fade — first 10% of scroll
       gsap.to(titleRef.current, {
         opacity: 0,
         scale: 0.85,
@@ -120,12 +165,12 @@ export function ScrollHero() {
         scrollTrigger: {
           trigger: container,
           start: "top top",
-          end: "15% top",
+          end: "10% top",
           scrub: true,
         },
       });
 
-      // HUD fade-in — 10-20% of scroll
+      // HUD fade-in — 8-15% of scroll
       gsap.fromTo(
         hudRef.current,
         { opacity: 0, y: 20 },
@@ -135,14 +180,14 @@ export function ScrollHero() {
           ease: "power2.out",
           scrollTrigger: {
             trigger: container,
-            start: "10% top",
-            end: "20% top",
+            start: "8% top",
+            end: "15% top",
             scrub: true,
           },
         }
       );
 
-      // Outro text — appears earlier
+      // Outro text
       gsap.fromTo(
         outroRef.current,
         { opacity: 0, y: 40 },
@@ -152,8 +197,8 @@ export function ScrollHero() {
           ease: "power2.out",
           scrollTrigger: {
             trigger: container,
-            start: "78% top",
-            end: "88% top",
+            start: "85% top",
+            end: "93% top",
             scrub: true,
           },
         }
@@ -161,28 +206,29 @@ export function ScrollHero() {
     }, containerRef);
 
     return () => ctx.revert();
-  }, [totalFrames]);
+  }, []);
 
-  const progress = currentFrame / (totalFrames - 1);
+  const progress = virtualFrame / (TOTAL_VIRTUAL_FRAMES - 1);
 
   return (
     <section
       ref={containerRef}
-      className="relative h-[450vh] bg-black"
+      className="relative h-[540vh] bg-black"
       aria-label="Strike detection scroll sequence"
     >
       <div className="sticky top-0 h-screen overflow-hidden">
         {/* Full-bleed canvas */}
         <canvas
           ref={canvasRef}
+          aria-label="Strike detection video frame playback"
           className="absolute inset-0 w-full h-full object-cover"
           style={{ filter: loaded ? "none" : "blur(20px)" }}
         />
 
-        {/* Vignette — top + bottom gradient for text legibility */}
+        {/* Vignette */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-transparent via-40% to-black/90 pointer-events-none" />
 
-        {/* Strike detected flash — pulses when model crosses threshold */}
+        {/* Strike flash */}
         <div
           className="absolute inset-0 pointer-events-none transition-opacity duration-200"
           style={{
@@ -193,14 +239,12 @@ export function ScrollHero() {
           }}
         />
 
-        {/* ───────────────────────────────────────────────────── */}
-        {/* TITLE — opening shot                                   */}
-        {/* ───────────────────────────────────────────────────── */}
+        {/* ───── TITLE ───── */}
         <div
           ref={titleRef}
           className="absolute inset-0 flex flex-col items-center justify-center text-center px-5 pointer-events-none"
         >
-          <div className="text-[10px] sm:text-[11px] font-mono tracking-[6px] uppercase text-white/40 mb-6">
+          <div className="text-[10px] sm:text-[11px] font-mono tracking-[6px] uppercase text-white/60 mb-6">
             Strike Detection · Frame-by-Frame · By Thomas Ou
           </div>
           <h1 className="text-[clamp(80px,18vw,280px)] font-black leading-[0.82] tracking-[-0.02em] text-white font-[family-name:var(--font-anton)]">
@@ -228,16 +272,14 @@ export function ScrollHero() {
           </div>
         </div>
 
-        {/* ───────────────────────────────────────────────────── */}
-        {/* HUD — mono telemetry, always legible                   */}
-        {/* ───────────────────────────────────────────────────── */}
+        {/* ───── HUD ───── */}
         <div
           ref={hudRef}
           className="absolute inset-0 pointer-events-none opacity-0"
         >
           {/* Top-left: model identity */}
           <div className="absolute top-6 left-6 sm:top-8 sm:left-8">
-            <div className="text-[9px] font-mono tracking-[3px] uppercase text-white/40 mb-1">
+            <div className="text-[9px] font-mono tracking-[3px] uppercase text-white/60 mb-1">
               Model
             </div>
             <div className="text-[11px] font-mono tracking-[2px] text-white/80">
@@ -247,15 +289,15 @@ export function ScrollHero() {
 
           {/* Top-right: clip identity */}
           <div className="absolute top-6 right-6 sm:top-8 sm:right-8 text-right">
-            <div className="text-[9px] font-mono tracking-[3px] uppercase text-white/40 mb-1">
+            <div className="text-[9px] font-mono tracking-[3px] uppercase text-white/60 mb-1">
               Sequence
             </div>
             <div className="text-[11px] font-mono tracking-[2px] text-white/80 uppercase">
-              {clip.name} · 200 Frames
+              {clip.name} · {clip.totalFrames} Frames
             </div>
           </div>
 
-          {/* Prediction badge — center-top, morphs */}
+          {/* Prediction badge */}
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[200%] sm:-translate-y-[240%]">
             <div
               className="px-5 py-2 text-[11px] sm:text-[13px] font-black tracking-[5px] uppercase font-[family-name:var(--font-oswald)] transition-all duration-300"
@@ -275,12 +317,31 @@ export function ScrollHero() {
             </div>
           </div>
 
-          {/* Bottom bar: confidence + frame + progress */}
+          {/* Bottom bar */}
           <div className="absolute bottom-0 inset-x-0 px-6 sm:px-8 pb-6 sm:pb-8">
+            {/* Clip indicators */}
+            <div className="flex items-center gap-2 mb-3">
+              {heroClips.map((c, i) => (
+                <div
+                  key={c.id}
+                  className="flex items-center gap-1.5 transition-opacity duration-300"
+                  style={{ opacity: i === clipIndex ? 1 : 0.3 }}
+                >
+                  <span
+                    className="w-1.5 h-1.5 rounded-full transition-colors duration-300"
+                    style={{ background: i === clipIndex ? "#dc2626" : "rgba(255,255,255,0.3)" }}
+                  />
+                  <span className="text-[8px] font-mono tracking-[2px] uppercase text-white/70">
+                    {c.name}
+                  </span>
+                </div>
+              ))}
+            </div>
+
             {/* Confidence meter */}
             <div className="mb-4">
               <div className="flex items-center justify-between text-[9px] font-mono tracking-[3px] uppercase mb-2">
-                <span className="text-white/40">Confidence</span>
+                <span className="text-white/60">Confidence</span>
                 <span
                   className="tabular-nums text-[18px] sm:text-[22px] font-bold tracking-tight"
                   style={{
@@ -301,30 +362,29 @@ export function ScrollHero() {
                         : "rgba(255,255,255,0.4)",
                   }}
                 />
-                {/* Threshold marker at 0.5 */}
                 <div className="absolute top-[-4px] bottom-[-4px] left-1/2 w-px bg-white/30" />
-                <div className="absolute -top-5 left-1/2 -translate-x-1/2 text-[8px] font-mono text-white/30 tracking-[2px]">
+                <div className="absolute -top-5 left-1/2 -translate-x-1/2 text-[8px] font-mono text-white/50 tracking-[2px]">
                   0.5
                 </div>
               </div>
             </div>
 
             {/* Frame + window + scroll progress */}
-            <div className="flex items-center justify-between text-[9px] font-mono tracking-[3px] uppercase text-white/50">
+            <div className="flex items-center justify-between text-[9px] font-mono tracking-[3px] uppercase text-white/60">
               <div className="flex items-center gap-6">
                 <span>
                   Frame{" "}
                   <span className="text-white/80 tabular-nums">
-                    {String(currentFrame).padStart(3, "0")}
+                    {String(localFrame).padStart(3, "0")}
                   </span>
-                  <span className="text-white/25"> / {totalFrames - 1}</span>
+                  <span className="text-white/50"> / {clip.totalFrames - 1}</span>
                 </span>
                 <span className="hidden sm:inline">
                   Window{" "}
                   <span className="text-white/80 tabular-nums">
                     {String(currentWindow).padStart(2, "0")}
                   </span>
-                  <span className="text-white/25"> / {predictions.length - 1}</span>
+                  <span className="text-white/50"> / {predictions.length - 1}</span>
                 </span>
               </div>
               <span className="tabular-nums">
@@ -332,26 +392,21 @@ export function ScrollHero() {
               </span>
             </div>
           </div>
-
-          {/* Corner brackets — cinematic */}
-          <div className="absolute top-6 left-6 sm:top-8 sm:left-8 w-3 h-3 border-l border-t border-white/20 pointer-events-none hidden" />
         </div>
 
-        {/* ───────────────────────────────────────────────────── */}
-        {/* OUTRO — exit text                                      */}
-        {/* ───────────────────────────────────────────────────── */}
+        {/* ───── OUTRO ───── */}
         <div
           ref={outroRef}
           className="absolute inset-x-0 bottom-[20%] text-center px-5 pointer-events-none opacity-0"
         >
           <div className="text-[10px] font-mono tracking-[5px] uppercase text-[#f97316] mb-3">
-            Peak Confidence {Math.max(...predictions.map((p) => p.confidence)).toFixed(2)}
+            {heroClips.length} Clips · {TOTAL_VIRTUAL_FRAMES} Frames
           </div>
           <div className="text-[clamp(32px,5vw,64px)] font-black leading-tight tracking-tight text-white font-[family-name:var(--font-anton)]">
             One Weekend.<br />
             38 Hand-Labeled Windows.
           </div>
-          <div className="mt-4 text-[11px] font-mono tracking-[3px] uppercase text-white/40">
+          <div className="mt-4 text-[11px] font-mono tracking-[3px] uppercase text-white/60">
             Continue ↓
           </div>
         </div>

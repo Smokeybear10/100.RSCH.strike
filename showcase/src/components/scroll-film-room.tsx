@@ -53,7 +53,7 @@ export function ScrollFilmRoom() {
     <section
       id="film-room"
       ref={containerRef}
-      className="relative h-[450vh] bg-black"
+      className="relative h-[350vh] bg-black"
       aria-label="Film Room — live inference demo"
     >
       <div className="sticky top-0 h-screen flex items-center justify-center overflow-hidden">

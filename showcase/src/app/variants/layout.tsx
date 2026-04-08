@@ -5,7 +5,6 @@ import {
   Playfair_Display,
   EB_Garamond,
   Orbitron,
-  Rajdhani,
   Space_Mono,
 } from "next/font/google";
 
@@ -35,11 +34,6 @@ const orbitron = Orbitron({
   subsets: ["latin"],
   variable: "--font-orbitron",
 });
-const rajdhani = Rajdhani({
-  weight: ["400", "500", "600", "700"],
-  subsets: ["latin"],
-  variable: "--font-rajdhani",
-});
 const spaceMono = Space_Mono({
   weight: ["400", "700"],
   subsets: ["latin"],
@@ -53,7 +47,6 @@ const fontVars = [
   playfair.variable,
   ebGaramond.variable,
   orbitron.variable,
-  rajdhani.variable,
   spaceMono.variable,
 ].join(" ");
 

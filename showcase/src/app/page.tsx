@@ -106,7 +106,7 @@ export default function Home() {
           </SlamIn>
 
           <SlamIn variant="sweep" delay={300}>
-            <div className="text-center mb-8 text-[11px] font-black tracking-[4px] uppercase text-white/40 font-[family-name:var(--font-oswald)]">
+            <div className="text-center mb-8 text-[11px] font-black tracking-[4px] uppercase text-white/60 font-[family-name:var(--font-oswald)]">
               Segment · Annotate · Classify
             </div>
           </SlamIn>
@@ -284,7 +284,7 @@ export default function Home() {
                         <span className="text-[14px] font-black text-[#f59e0b] font-[family-name:var(--font-oswald)]">
                           F{i + 1}
                         </span>
-                        <span className="absolute top-1 right-1 text-[7px] font-mono text-white/40">
+                        <span className="absolute top-1 right-1 text-[7px] font-mono text-white/60">
                           {String(i * 33).padStart(3, "0")}
                         </span>
                       </div>
@@ -381,7 +381,7 @@ export default function Home() {
               {/* Chart area */}
               <div className="relative">
                 {/* Y-axis labels */}
-                <div className="absolute -left-1 top-0 bottom-0 flex flex-col justify-between text-[7px] font-mono text-white/30 -translate-x-full pr-2">
+                <div className="absolute -left-1 top-0 bottom-0 flex flex-col justify-between text-[7px] font-mono text-white/50 -translate-x-full pr-2">
                   <span>1.0</span>
                   <span>0.5</span>
                   <span>0.0</span>
@@ -419,26 +419,26 @@ export default function Home() {
               {/* Stats row */}
               <div className="mt-4 pt-4 border-t border-white/10 grid grid-cols-4 gap-6">
                 <div>
-                  <div className="text-[8px] font-mono tracking-[2px] uppercase text-white/40 mb-1">Peak</div>
+                  <div className="text-[8px] font-mono tracking-[2px] uppercase text-white/60 mb-1">Peak</div>
                   <div className="text-[24px] font-black text-[#f59e0b] font-[family-name:var(--font-anton)] leading-none">
                     <CountUp target={0.947} decimals={3} duration={1800} />
                   </div>
                 </div>
                 <div>
-                  <div className="text-[8px] font-mono tracking-[2px] uppercase text-white/40 mb-1">Threshold</div>
+                  <div className="text-[8px] font-mono tracking-[2px] uppercase text-white/60 mb-1">Threshold</div>
                   <div className="text-[24px] font-black text-white/70 font-[family-name:var(--font-anton)] leading-none">
                     <CountUp target={0.500} decimals={3} duration={1400} />
                   </div>
                 </div>
                 <div>
-                  <div className="text-[8px] font-mono tracking-[2px] uppercase text-white/40 mb-1">Strikes</div>
+                  <div className="text-[8px] font-mono tracking-[2px] uppercase text-white/60 mb-1">Strikes</div>
                   <div className="text-[24px] font-black text-[#dc2626] font-[family-name:var(--font-anton)] leading-none">
                     <CountUp target={7} duration={1200} />
-                    <span className="text-[14px] text-white/30"> / 38</span>
+                    <span className="text-[14px] text-white/50"> / 38</span>
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-[8px] font-mono tracking-[2px] uppercase text-white/40 mb-1">Decision</div>
+                  <div className="text-[8px] font-mono tracking-[2px] uppercase text-white/60 mb-1">Decision</div>
                   <div className="text-[24px] font-black text-[#dc2626] font-[family-name:var(--font-anton)] leading-none">
                     KO · R2
                   </div>
@@ -525,7 +525,7 @@ export default function Home() {
           </SlamIn>
 
           {/* Socials as corners */}
-          <div className="flex items-center justify-center gap-10 mb-10">
+          <nav aria-label="Social links" className="flex items-center justify-center gap-10 mb-10">
             {socialLinks.map((link, i) => (
               <SlamIn key={link.name} variant="sweep" delay={i * 100}>
                 <a
@@ -538,13 +538,13 @@ export default function Home() {
                 </a>
               </SlamIn>
             ))}
-          </div>
+          </nav>
 
           {/* Sanction bar */}
           <div className="border-t border-[#dc2626]/40 pt-5 flex items-center justify-between text-[9px] font-mono tracking-[2px] uppercase">
-            <span className="text-white/40">MMXXV · Independent</span>
+            <span className="text-white/60">MMXXV · Independent</span>
             <span className="text-[#f59e0b]">End Of Card</span>
-            <span className="text-white/40">Thomas Ou · 2025</span>
+            <span className="text-white/60">Thomas Ou · 2025</span>
           </div>
         </div>
       </footer>

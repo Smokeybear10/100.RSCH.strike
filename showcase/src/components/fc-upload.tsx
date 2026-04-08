@@ -5,14 +5,13 @@ import { useState, useRef, useCallback } from "react";
 export function FCUpload() {
   const [dragOver, setDragOver] = useState(false);
   const [fileName, setFileName] = useState<string | null>(null);
-  const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
+  const [status, setStatus] = useState<"idle" | "loading" | "demo">("idle");
   const inputRef = useRef<HTMLInputElement>(null);
 
   const processFile = (file: File) => {
     setFileName(file.name);
     setStatus("loading");
-    // Simulate upload + inference, then fail
-    setTimeout(() => setStatus("error"), 3000);
+    setTimeout(() => setStatus("demo"), 3000);
   };
 
   const handleDrop = useCallback((e: React.DragEvent) => {
@@ -50,18 +49,32 @@ export function FCUpload() {
 
       {/* Drop zone */}
       <div
+        role="button"
+        tabIndex={status === "loading" ? -1 : 0}
+        aria-label={
+          status === "loading" ? "Processing video" :
+          status === "demo" ? "Demo only, click to reset" :
+          "Upload video file"
+        }
         className={`border-[3px] border-dashed ${
           dragOver
             ? "border-[#f59e0b] bg-[#f59e0b]/10 scale-[1.01]"
-            : status === "error"
-            ? "border-[#dc2626] bg-[#1a0000]"
+            : status === "demo"
+            ? "border-[#f59e0b] bg-[#1a0000]"
             : fileName
             ? "border-[#f59e0b] bg-[#1a0000]"
             : "border-[#dc2626] bg-[#0a0000] hover:bg-[#1a0000]"
-        } transition-all ${status === "loading" ? "" : "cursor-pointer"} px-12 py-16 text-center`}
+        } transition-all ${status === "loading" ? "" : "cursor-pointer"} px-12 py-16 text-center outline-none focus-visible:ring-2 focus-visible:ring-[#f59e0b]`}
         onClick={() => {
           if (status === "loading") return;
-          if (status === "error") { reset(); return; }
+          if (status === "demo") { reset(); return; }
+          inputRef.current?.click();
+        }}
+        onKeyDown={(e) => {
+          if (e.key !== "Enter" && e.key !== " ") return;
+          e.preventDefault();
+          if (status === "loading") return;
+          if (status === "demo") { reset(); return; }
           inputRef.current?.click();
         }}
         onDragOver={(e) => {
@@ -90,25 +103,26 @@ export function FCUpload() {
               SAM2 Segmentation → TSN Classification
             </div>
           </>
-        ) : status === "error" ? (
+        ) : status === "demo" ? (
           <>
-            <div className="text-[8px] font-black tracking-[4px] uppercase text-[#dc2626] mb-4 font-[family-name:var(--font-oswald)]">
-              ● No Contest ●
+            <div className="text-[8px] font-black tracking-[4px] uppercase text-[#f59e0b] mb-4 font-[family-name:var(--font-oswald)]">
+              ● Demo Only ●
             </div>
-            <div className="mx-auto mb-5 w-14 h-14 border-[3px] border-[#dc2626] bg-black rounded-full flex items-center justify-center">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2.5">
-                <path d="M18 6L6 18M6 6l12 12" />
+            <div className="mx-auto mb-5 w-14 h-14 border-[3px] border-[#f59e0b] bg-black rounded-full flex items-center justify-center">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2.5">
+                <path d="M12 9v4M12 17h.01" />
+                <circle cx="12" cy="12" r="10" />
               </svg>
             </div>
             <div className="text-[20px] sm:text-[24px] font-black text-white font-[family-name:var(--font-oswald)] tracking-wide uppercase mb-2">
-              Something Went Wrong
+              Inference Not Connected
             </div>
-            <div className="text-[11px] font-mono tracking-[3px] uppercase text-white/50 mb-4">
-              Could not process video
+            <div className="text-[11px] font-mono tracking-[3px] uppercase text-white/60 mb-4">
+              GPU backend offline — demo showcase only
             </div>
-            <div className="inline-block border-2 border-[#dc2626] bg-black px-5 py-2 cursor-pointer hover:bg-[#dc2626]/20 transition-colors">
-              <span className="text-[10px] font-black tracking-[3px] uppercase text-[#dc2626] font-[family-name:var(--font-oswald)]">
-                Click to try again
+            <div className="inline-block border-2 border-[#f59e0b] bg-black px-5 py-2 cursor-pointer hover:bg-[#f59e0b]/20 transition-colors">
+              <span className="text-[10px] font-black tracking-[3px] uppercase text-[#f59e0b] font-[family-name:var(--font-oswald)]">
+                Click to reset
               </span>
             </div>
           </>

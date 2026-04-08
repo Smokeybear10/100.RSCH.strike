@@ -88,17 +88,17 @@ export function BroadcastChrome() {
               LIVE
             </span>
           </div>
-          <span className="text-[9px] text-white/40 font-mono">●</span>
+          <span className="text-[9px] text-white/60 font-mono">●</span>
           <span className="text-[10px] font-black tracking-[3px] uppercase text-white/95 font-[family-name:var(--font-oswald)]">
             STR1KE Main Card
           </span>
-          <span className="hidden sm:inline text-[9px] text-white/40 font-mono">
+          <span className="hidden sm:inline text-[9px] text-white/60 font-mono">
             ●
           </span>
           <span className="hidden sm:inline text-[9px] font-mono tracking-[2px] uppercase text-white/75">
             04 · 04 · 2025
           </span>
-          <span className="hidden md:inline text-[9px] text-white/40 font-mono">●</span>
+          <span className="hidden md:inline text-[9px] text-white/60 font-mono">●</span>
           <span className="hidden md:inline text-[9px] font-mono tracking-[2px] uppercase text-white/75">
             Thomas Ou
           </span>
@@ -114,7 +114,7 @@ export function BroadcastChrome() {
               {tickerItems.map((item, i) => (
                 <span key={i} className="flex items-center gap-10 shrink-0">
                   <span>{item}</span>
-                  <span className="text-white/30">//</span>
+                  <span className="text-white/50">//</span>
                 </span>
               ))}
             </span>

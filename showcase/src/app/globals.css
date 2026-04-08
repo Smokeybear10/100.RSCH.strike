@@ -372,9 +372,11 @@ body::before {
 
 /* Fallback for browsers without animation-timeline (Safari < 26, etc) */
 @supports not (animation-timeline: view()) {
-  .scroll-scale-hero,
+  .scroll-scale-hero {
+    animation: scroll-scale-down 1.2s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
   .scroll-drift-up {
-    animation: none;
+    animation: scroll-drift-up 1s cubic-bezier(0.22, 1, 0.36, 1) both;
   }
   .scroll-draw-path {
     animation: draw-stroke 2s cubic-bezier(0.65, 0, 0.35, 1) 200ms both;

@@ -4,6 +4,10 @@ import { useEffect, useRef, useState } from "react";
 import { demoClips } from "@/lib/demo-data";
 import { framePath, getConfidence, getPrediction } from "@/lib/player-utils";
 
+const ric = typeof window !== "undefined" && window.requestIdleCallback
+  ? window.requestIdleCallback
+  : (cb: () => void) => setTimeout(cb, 1) as unknown as number;
+
 type Props = { clipIdx: number; onClipChange?: (idx: number) => void; clipProgress?: number };
 
 export function FilmRoom({ clipIdx, onClipChange, clipProgress = 0 }: Props) {
@@ -24,6 +28,7 @@ export function FilmRoom({ clipIdx, onClipChange, clipProgress = 0 }: Props) {
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const cacheRef = useRef<Map<number, HTMLImageElement>>(new Map());
+  const canvasSizeRef = useRef({ w: 0, h: 0 });
 
   // Preload frames when clip changes
   useEffect(() => {
@@ -56,9 +61,9 @@ export function FilmRoom({ clipIdx, onClipChange, clipProgress = 0 }: Props) {
       const end = Math.min(bg + 20, totalFrames);
       for (let i = bg; i < end; i++) loadFrame(i);
       bg = end;
-      if (bg < totalFrames) requestIdleCallback(loadBatch);
+      if (bg < totalFrames) ric(loadBatch);
     };
-    if (eager < totalFrames) requestIdleCallback(loadBatch);
+    if (eager < totalFrames) ric(loadBatch);
   }, [totalFrames, frameDir]);
 
   // Draw current frame
@@ -67,22 +72,23 @@ export function FilmRoom({ clipIdx, onClipChange, clipProgress = 0 }: Props) {
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
+    const draw = (image: HTMLImageElement) => {
+      if (canvasSizeRef.current.w !== image.naturalWidth || canvasSizeRef.current.h !== image.naturalHeight) {
+        canvas.width = image.naturalWidth;
+        canvas.height = image.naturalHeight;
+        canvasSizeRef.current = { w: image.naturalWidth, h: image.naturalHeight };
+      }
+      ctx.drawImage(image, 0, 0);
+    };
     const img = cacheRef.current.get(frameIdx);
     if (img) {
-      canvas.width = img.naturalWidth;
-      canvas.height = img.naturalHeight;
-      ctx.drawImage(img, 0, 0);
+      draw(img);
     } else {
       for (let offset = 1; offset < 20; offset++) {
         const near =
           cacheRef.current.get(frameIdx - offset) ||
           cacheRef.current.get(frameIdx + offset);
-        if (near) {
-          canvas.width = near.naturalWidth;
-          canvas.height = near.naturalHeight;
-          ctx.drawImage(near, 0, 0);
-          return;
-        }
+        if (near) { draw(near); return; }
       }
     }
   }, [frameIdx]);
@@ -161,13 +167,23 @@ export function FilmRoom({ clipIdx, onClipChange, clipProgress = 0 }: Props) {
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_200px] min-h-0 flex-1">
             {/* Canvas */}
             <div
-              className="relative bg-black overflow-hidden border-b-2 lg:border-b-0 lg:border-r-2 border-[#dc2626]/40 min-h-[280px] lg:min-h-0 cursor-pointer"
+              role="button"
+              tabIndex={0}
+              aria-label={playing ? "Pause video playback" : "Play video playback"}
+              className="relative bg-black overflow-hidden border-b-2 lg:border-b-0 lg:border-r-2 border-[#dc2626]/40 min-h-[280px] lg:min-h-0 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#f59e0b]"
               onMouseEnter={() => setHovering(true)}
               onMouseLeave={() => setHovering(false)}
               onClick={() => setPlaying((p) => !p)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  setPlaying((p) => !p);
+                }
+              }}
             >
               <canvas
                 ref={canvasRef}
+                aria-label="Film room video frame playback"
                 className="absolute inset-0 w-full h-full object-contain transition-[filter] duration-300"
                 style={{ filter: loaded ? "none" : "blur(14px)" }}
               />
@@ -265,7 +281,7 @@ export function FilmRoom({ clipIdx, onClipChange, clipProgress = 0 }: Props) {
             {/* Telemetry panel */}
             <div className="p-3 flex flex-col gap-2 justify-center">
               <div>
-                <div className="text-[8px] font-mono tracking-[3px] uppercase text-white/40 mb-1">
+                <div className="text-[8px] font-mono tracking-[3px] uppercase text-white/60 mb-1">
                   Prediction
                 </div>
                 <div
@@ -278,7 +294,7 @@ export function FilmRoom({ clipIdx, onClipChange, clipProgress = 0 }: Props) {
 
               <div>
                 <div className="flex items-end justify-between mb-1.5">
-                  <div className="text-[8px] font-mono tracking-[3px] uppercase text-white/40">
+                  <div className="text-[8px] font-mono tracking-[3px] uppercase text-white/60">
                     Confidence
                   </div>
                   <div
@@ -303,7 +319,7 @@ export function FilmRoom({ clipIdx, onClipChange, clipProgress = 0 }: Props) {
                   />
                   <div className="absolute top-[-3px] bottom-[-3px] left-1/2 w-px bg-white/30" />
                 </div>
-                <div className="flex items-center justify-between mt-1 text-[7px] font-mono tracking-[2px] uppercase text-white/30">
+                <div className="flex items-center justify-between mt-1 text-[7px] font-mono tracking-[2px] uppercase text-white/50">
                   <span>0.000</span>
                   <span>TH 0.5</span>
                   <span>1.000</span>
@@ -311,12 +327,12 @@ export function FilmRoom({ clipIdx, onClipChange, clipProgress = 0 }: Props) {
               </div>
 
               <div>
-                <div className="text-[8px] font-mono tracking-[3px] uppercase text-white/40 mb-1">
+                <div className="text-[8px] font-mono tracking-[3px] uppercase text-white/60 mb-1">
                   Window
                 </div>
                 <div className="text-[18px] font-mono font-bold tabular-nums text-white/90 leading-none">
                   {String(currentWindow).padStart(2, "0")}
-                  <span className="text-white/30 text-[13px]">
+                  <span className="text-white/50 text-[13px]">
                     {" "}
                     / {predictions.length - 1}
                   </span>
@@ -324,7 +340,7 @@ export function FilmRoom({ clipIdx, onClipChange, clipProgress = 0 }: Props) {
               </div>
 
               <div className="pt-2 border-t border-white/10">
-                <div className="text-[8px] font-mono tracking-[3px] uppercase text-white/40 mb-1">
+                <div className="text-[8px] font-mono tracking-[3px] uppercase text-white/60 mb-1">
                   Window Range
                 </div>
                 <div className="text-[11px] font-mono tabular-nums text-white/70">
@@ -337,7 +353,7 @@ export function FilmRoom({ clipIdx, onClipChange, clipProgress = 0 }: Props) {
 
           {/* Timeline strip */}
           <div className="px-3 pt-1.5 pb-1.5 border-t-2 border-[#dc2626]/40 bg-black/50 flex-shrink-0">
-            <div className="flex items-center justify-between mb-1 text-[8px] font-mono tracking-[3px] uppercase text-white/40">
+            <div className="flex items-center justify-between mb-1 text-[8px] font-mono tracking-[3px] uppercase text-white/60">
               <span>Per-Window Calls</span>
               <span>
                 {predictions.length} Windows · {totalFrames} Frames
@@ -388,6 +404,7 @@ export function FilmRoom({ clipIdx, onClipChange, clipProgress = 0 }: Props) {
           <div className="flex items-center gap-3 px-3 py-1.5 border-t-2 border-[#dc2626]/40 bg-[#dc2626]/10 flex-shrink-0">
             <button
               onClick={() => setPlaying((p) => !p)}
+              aria-label={playing ? "Pause" : "Play"}
               className="text-[9px] font-mono tracking-[2px] uppercase text-[#f59e0b] cursor-pointer hover:text-white transition-colors flex items-center gap-1.5"
             >
               {playing ? (
@@ -403,7 +420,21 @@ export function FilmRoom({ clipIdx, onClipChange, clipProgress = 0 }: Props) {
               )}
             </button>
             <div
-              className="flex-1 relative h-4 cursor-pointer group"
+              role="slider"
+              tabIndex={0}
+              aria-label="Playback position"
+              aria-valuemin={0}
+              aria-valuemax={totalFrames - 1}
+              aria-valuenow={frameIdx}
+              aria-valuetext={`Frame ${frameIdx} of ${totalFrames - 1}`}
+              className="flex-1 relative h-4 cursor-pointer group outline-none focus-visible:ring-2 focus-visible:ring-[#f59e0b]"
+              onKeyDown={(e) => {
+                const step = e.shiftKey ? windowSize : 1;
+                if (e.key === "ArrowRight") { e.preventDefault(); setFrameIdx((f) => Math.min(totalFrames - 1, f + step)); }
+                else if (e.key === "ArrowLeft") { e.preventDefault(); setFrameIdx((f) => Math.max(0, f - step)); }
+                else if (e.key === "Home") { e.preventDefault(); setFrameIdx(0); }
+                else if (e.key === "End") { e.preventDefault(); setFrameIdx(totalFrames - 1); }
+              }}
               onClick={(e) => {
                 const rect = e.currentTarget.getBoundingClientRect();
                 const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
