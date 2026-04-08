@@ -1,43 +1,127 @@
-<div align="fill">
-<h1>Strike_Detection_ML</h1>
-  
-Computer vision project aiming to train a model to recognize 'strikes' in Mixed Martial Arts. _(Look in the top left corner of the GIF!)_
+# STR1KE
 
-![test_optimized_12345 (online-video-cutter com) (2)](https://github.com/user-attachments/assets/1bbdffa9-a937-4fc6-800c-53141c686507)
+**Live demo: [str1ke.vercel.app](https://str1ke.vercel.app)**
 
-<br>
+Strike detection in MMA footage using computer vision and temporal action recognition. A three-stage pipeline segments fighters from broadcast noise, classifies 5-frame windows as strike or neutral, and outputs per-window confidence scores.
 
-Earlier this year Facebook released its new Segment Anything Model (SAM2) which is a foundational model for solving promptable visual segmentation in images and videos. It excels in workflows that involve detecting discrete objects or parts of objects and creating masks for these parts. Masks are a more precise form of annotating image data which until now have been much more time consuming to create than using bounding boxes or keypoints. Being curious and excited about this new development is what inspired this project to train a model to recognize fighters, strikes/significant strikes and misses in MMA footage.
+![Hero](assets/demos/hero-title.gif)
 
-<br>
+## What It Does
 
-![image](https://github.com/user-attachments/assets/357b3784-a254-4954-b6e5-1e0601fd3d60)
+Drop in a clip of an MMA fight. The system isolates the fighters from the broadcast (cage, crowd, overlays), then runs inference on every 5-frame window — about 150ms of real time. Each window gets a confidence score between 0 and 1. Above 0.5 is a strike. Below is neutral.
 
-<h2>Training</h2>
+A strike lands in five frames. The model reads all five at once and makes a call.
 
-Initially I wrote a python script to integrate SAM2 into a browser-based labeling workflow, however this method proved cumbersome and slow. Instead I started using Label-Studio as my annotating platform integrated with a SAM2 backend for labeling and generating masks. These masks were 'pretty good' and while they were faster than manually creating the masks, a lot required manual adjustment so were still time-consuming to create. I had wanted subscribe to Label-Studio Premium which offers automated learning on labeling patterns meaning that after labeling something 3 or 4 times, the backend 'learns' the object being tracked over frames and can generate labels for the rest of the batch. However, Label-Studio hasn't replied to my subscription requests (probably because I'm not a company) yet so I was only able to label 200 frames representing 40 'moments' comprised of 5 frames each.
+## The Pipeline
 
-<br>
+### Round 1 — Segment
 
-<img src="https://github.com/user-attachments/assets/2ed3b636-2aa1-4eab-a9a3-661e62c2af25" alt="vlcsnap-2024-12-21-01h19m41s642-strike-0" width="195"/>
-<img src="https://github.com/user-attachments/assets/5bb28f4c-ad38-4f80-b70f-6d2cd0405fee" alt="vlcsnap-2024-12-21-01h19m42s506-strike-0" width="195"/>
-<img src="https://github.com/user-attachments/assets/0b98ec3b-b932-4276-a7a4-6b89d0ee5df5" alt="vlcsnap-2024-12-21-01h19m43s309-strike-0" width="195"/>
-<img src="https://github.com/user-attachments/assets/c484a10e-addc-4e7a-b502-e7bc300c265f" alt="vlcsnap-2024-12-21-01h19m44s306-strike-0" width="195"/>
+SAM2 (Meta's Segment Anything Model 2) strips the broadcast. Prompted once per fighter in the first frame, it propagates masks forward through the entire clip. The output: fighter silhouettes on black. No cage, no crowd, no graphics. The classifier sees motion, not television.
 
-<br>
+SAM2's streaming memory architecture handles the fast occlusions and overlapping bodies that make MMA footage difficult for traditional segmentation.
 
-I had planned to [train a model with the 3DCNN architecture](https://github.com/AndreF343/Strike_Detection_ML/blob/main/3DCNN_Pipeline.ipynb) which excels on inferring relationships in spatio-temporal data. However this architecture was too RAM-intensive for my google colab runtime to handle. Additionally, even if I was able to reduce RAM usage by batching the training, I still did not have enough data points to make a difference so instead I decided to feed my dataset to a pre-trained model using the open source CV framework MMAction2. With the MMAction2 framework I was able to supply my data [to the pretrained Temporal Segment Network (TSN) model](https://github.com/AndreF343/Strike_Detection_ML/blob/main/TSN_Pipeline.ipynb) to generate the gifs included in this readme.
+### Round 2 — Annotate
 
-<br>
+38 five-frame windows labeled by hand in Label Studio with a SAM2 backend for mask generation. 19 strikes, 19 neutral. One weekend at a kitchen table.
 
-![test_optimized_7 (online-video-cutter com)](https://github.com/user-attachments/assets/e7752d59-dc62-4b78-a4bc-8147caf16d5b)
+Each window is a folder of 5 consecutive JPEG frames in MMAction2's RawframeDataset format. Annotation files map paths to frame counts and class labels:
 
-<br>
+```
+strike/0 5 1
+neutral/0 5 0
+```
 
-<h2>Result</h2>
+Split: 30 train, 6 validation, 2 held-out test.
 
-While the model's accuracy is not production-ready, the accuracy for having only 40 data points was quite impressive. There is clear room for tuning the model's efficiency and parameter configuration, but the ultimate bottle-neck remains the dataset size. If Label-Studio ever does get back to me about using their integrated ML backend solutions, I may revisit this project to improve it's accuracy and expand the number of detectable classes.
+The dataset is small because Label Studio Premium's ML-assisted labeling (which auto-propagates after a few manual examples) wasn't available. Every mask required manual verification.
 
-Included in this repository are the scripts used to train the [3DCNN model](https://github.com/AndreF343/Strike_Detection_ML/blob/main/3DCNN_Pipeline.ipynb) and the [TSN model](https://github.com/AndreF343/Strike_Detection_ML/blob/main/TSN_Pipeline.ipynb) (higher accuracy) using the MMAction2 framework, as well as the training data used to generate the models.
+### Round 3 — Classify
 
-</div>
+A Temporal Segment Network (TSN) with a ResNet-50 backbone, pretrained on Kinetics-400 (400 human action classes, ~300K video clips), fine-tuned for binary strike/neutral classification.
+
+TSN works in three steps:
+
+1. **Sample** — takes 5 consecutive frames as one temporal clip
+2. **Extract** — each frame passes through the shared ResNet-50 backbone, producing a 2048-dim feature vector
+3. **Aggregate** — frame features are averaged into a single representation, then a classification head outputs strike/neutral probabilities
+
+Training ran for 20 epochs on Google Colab's free tier. Under one minute total.
+
+![Film Room — Knockdown](assets/demos/film-room-knockdown.gif)
+
+![Film Room — Exchange](assets/demos/film-room-exchange.gif)
+
+![Film Room — Pressure](assets/demos/film-room-pressure.gif)
+
+## Why TSN
+
+A 3D CNN was attempted first. It took 4-channel input (RGB + SAM2 mask) to explicitly feed spatial mask data to the network. It never converged — 37.5% validation accuracy across all 20 epochs. With 38 data points, training from scratch couldn't work.
+
+TSN pretrained on Kinetics-400 already understands human body motion, poses, and temporal dynamics from 300K labeled videos. Fine-tuning only adapts the final layer. The backbone does the heavy lifting.
+
+The lesson: with extremely small datasets, transfer learning from a large pretrained model dramatically outperforms training from scratch, even if the from-scratch architecture is theoretically more expressive.
+
+## Key Decisions
+
+**5-frame windows** — At 30fps, 5 frames is ~167ms. A typical MMA strike takes 100-200ms from initiation to landing. The window captures the full action without diluting the signal with neutral movement before or after.
+
+**Binary classification** — 38 labeled windows split across multiple strike types (jab, cross, kick, elbow) would mean ~5 samples per class. Binary strike/neutral is the simplest formulation that still produces a useful signal.
+
+**SAM2 as preprocessing** — Most approaches feed raw video to the classifier and hope it learns to ignore the background. By explicitly removing the background first, the problem simplifies from action recognition in noisy broadcast footage to action recognition on clean silhouettes. This also makes the tiny dataset go further — the model doesn't waste capacity learning what's background vs. fighter.
+
+**Raw frames over video files** — MMAction2's RawframeDataset format allows frame-level preprocessing (applying SAM2 masks per frame) and avoids codec decoding overhead during training.
+
+## Results
+
+The model correctly identifies obvious strikes (clear punches, knockdowns) with high confidence. Transfer learning from Kinetics-400 provides a strong prior on human body motion, and SAM2 segmentation significantly reduces background noise.
+
+Limitations:
+
+- 38 windows is small. The model likely overfits to the source fight (Topuria vs. Holloway) and would struggle with different fighters, weight classes, or camera angles.
+- Binary classification can't distinguish strike types.
+- Each 5-frame window is classified independently — no temporal context between windows.
+- Inference writes temporary video files per window (MMAction2 API constraint), which limits real-time throughput.
+
+## What Would Improve It
+
+More labeled data is the primary bottleneck. Even 200-500 windows would dramatically improve generalization. Beyond that: multi-fight datasets across weight classes, multi-class labels (jab, kick, takedown), and sliding windows with overlap to catch strikes that span window boundaries.
+
+## Tech Stack
+
+| Layer | Tools |
+|-------|-------|
+| Segmentation | SAM2 (Meta) |
+| Annotation | Label Studio + SAM2 backend |
+| Framework | MMAction2 (OpenMMLab) |
+| Model | TSN (ResNet-50, Kinetics-400 pretrain) |
+| Training | PyTorch, Google Colab (free tier) |
+| Showcase | Next.js, Tailwind CSS, GSAP |
+
+## Project Structure
+
+```
+STR1KE/
+├── model/
+│   ├── notebooks/
+│   │   ├── TSN_Pipeline.ipynb       # TSN fine-tuning + inference
+│   │   └── 3DCNN_Pipeline.ipynb     # 3D CNN attempt (abandoned)
+│   └── data/
+│       ├── annotations/             # train/val/test splits
+│       └── frames/
+│           ├── strike/              # 19 windows, 5 frames each
+│           └── neutral/             # 19 windows, 5 frames each
+├── showcase/                        # interactive demo site
+│   └── src/
+│       ├── app/                     # Next.js pages
+│       ├── components/              # scroll hero, film room, upload
+│       └── lib/                     # clip data, player utils
+├── assets/
+│   ├── demos/                       # showcase GIFs
+│   └── Mma_pictogram.svg
+├── PROJECT_OVERVIEW.md              # deep technical writeup
+└── README.md
+```
+
+---
+
+Built by Thomas Ou

@@ -1,0 +1,18 @@
+# Source video files (kept locally for frame extraction)
+*.mp4
+*.avi
+*.mov
+*.mkv
+
+# Python
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# Model checkpoints
+*.pt
+*.pth
+
+# OS
+.DS_Store
+.gstack/
