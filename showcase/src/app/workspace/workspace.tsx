@@ -451,7 +451,7 @@ export function Workspace() {
         <aside className={styles.sidebar}>
           <div className={styles.sectionHeading}><h2>Review queue</h2><span>0 windows</span></div>
           <div className={styles.queueEmpty}><p>Your video windows will appear here.</p><button disabled={!ready || busy !== null} onClick={() => backupRef.current?.click()}>Restore a saved review</button></div>
-          <div className={styles.emptyModel}><h2>Model predictions</h2><p>Scoring runs separately in Python. Import the results here to compare them with your labels.</p><span>Development model · accuracy on new fights is unverified.</span></div>
+          <div className={styles.emptyModel}><h2>Model predictions</h2><p>Scoring runs separately in Python. Import the results here to compare them with your labels.</p></div>
         </aside>
       </section> : <>
         <nav className={styles.mobileSections} aria-label="Workspace sections"><Link href="#footage">Footage & labels</Link><Link href="#review-queue">Review queue <span>{clips.length}</span></Link></nav>
@@ -499,7 +499,7 @@ export function Workspace() {
             </section>
             <section className={styles.modelPanel}>
               <div className={styles.sectionHeading}><h2>Model predictions</h2><button onClick={() => predictionRef.current?.click()}>Import scores</button></div>
-              {project.prediction_run ? <><p className={styles.modelName}>{project.prediction_run.predictions.length} windows scored · threshold {project.prediction_run.model.threshold}</p>{selected && prediction ? <div className={styles.predictionDetail}><span>{prediction.probability_strike >= project.prediction_run.model.threshold ? "Model: attempt" : "Model: no attempt"}</span><strong>{prediction.probability_strike.toFixed(3)}</strong>{isDisagreement(selected, prediction, threshold) && <p>Differs from your label. Check the footage before changing it.</p>}</div> : <p className={styles.hint}>{changedRange ? "Save the new times, then rerun predictions for this window." : "Select a window to inspect its score."}</p>}<p className={styles.hint}>Development model. Accuracy on new fights is unverified; scores never change your labels.</p></> : <p>Scoring runs separately in Python. Import <code>predictions.json</code> to review the results here.</p>}
+              {project.prediction_run ? <><p className={styles.modelName}>{project.prediction_run.predictions.length} windows scored · threshold {project.prediction_run.model.threshold}</p>{selected && prediction ? <div className={styles.predictionDetail}><span>{prediction.probability_strike >= project.prediction_run.model.threshold ? "Model: attempt" : "Model: no attempt"}</span><strong>{prediction.probability_strike.toFixed(3)}</strong>{isDisagreement(selected, prediction, threshold) && <p>Differs from your label. Check the footage before changing it.</p>}</div> : <p className={styles.hint}>{changedRange ? "Save the new times, then rerun predictions for this window." : "Select a window to inspect its score."}</p>}<p className={styles.hint}>Scores never change your labels.</p></> : <p>Scoring runs separately in Python. Import <code>predictions.json</code> to review the results here.</p>}
               <details className={styles.runInstructions}><summary>Run predictions locally</summary><ol><li>Export your annotation backup.</li><li>Prepare the windows from the original video:<pre>python -m model.prepare \
   --annotations annotations.json \
   --video /path/to/footage.mp4 \
