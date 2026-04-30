@@ -1,4 +1,4 @@
-# STR1KE
+# Strike
 
 **Live demo: [str1ke.vercel.app](https://str1ke.vercel.app)**
 
