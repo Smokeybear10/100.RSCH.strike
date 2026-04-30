@@ -29,7 +29,7 @@ export function SAM2Slider() {
       aria-valuemax={100}
       aria-valuenow={Math.round(pos)}
       aria-valuetext={`${Math.round(pos)}% broadcast, ${100 - Math.round(pos)}% mask`}
-      className="relative aspect-video touch-pan-y cursor-ew-resize select-none overflow-hidden border border-rule bg-black outline-none focus-visible:ring-2 focus-visible:ring-red-600"
+      className="relative aspect-video touch-pan-y cursor-ew-resize select-none overflow-hidden border border-rule bg-black outline-none focus-visible:ring-2 focus-visible:ring-ink"
       onPointerDown={(e) => {
         e.currentTarget.setPointerCapture(e.pointerId);
         setFromEvent(e.clientX);
@@ -51,6 +51,8 @@ export function SAM2Slider() {
         src={`/clips/knockdown/${FRAME}`}
         alt="Original broadcast frame from the knockdown example"
         className="absolute inset-0 h-full w-full object-cover"
+        loading="lazy"
+        decoding="async"
         draggable={false}
       />
 
@@ -66,22 +68,24 @@ export function SAM2Slider() {
           src={`/clips/knockdown-masked/${FRAME}`}
           alt="The same frame with colored SAM2 overlays on both fighters"
           className="absolute inset-0 h-full w-full object-cover"
-          draggable={false}
+          loading="lazy"
+        decoding="async"
+        draggable={false}
         />
       </div>
 
       {/* Side labels — match what's actually showing on each side */}
       <div
-        className="pointer-events-none absolute left-4 top-4 bg-black/60 px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.22em] text-ink-mute backdrop-blur-sm transition-opacity"
+        className="pointer-events-none absolute left-4 top-4 bg-black/60 px-2.5 py-1 font-sans text-xs text-ink-mute backdrop-blur-sm transition-opacity"
         style={{ opacity: pos > 18 ? 1 : 0.3 }}
       >
-        BROADCAST
+        Broadcast
       </div>
       <div
-        className="pointer-events-none absolute right-4 top-4 bg-black/60 px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.22em] text-red-600 backdrop-blur-sm transition-opacity"
+        className="pointer-events-none absolute right-4 top-4 bg-black/60 px-2.5 py-1 font-sans text-xs text-ink backdrop-blur-sm transition-opacity"
         style={{ opacity: pos < 82 ? 1 : 0.3 }}
       >
-        SAM2 MASK
+        SAM2 mask
       </div>
 
       {/* Drag handle */}
@@ -89,8 +93,8 @@ export function SAM2Slider() {
         className="pointer-events-none absolute inset-y-0"
         style={{ left: `${pos}%` }}
       >
-        <div className="absolute inset-y-0 -left-px w-0.5 bg-red-600" />
-        <div className="absolute left-0 top-1/2 flex h-7 w-7 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-red-600 ring-2 ring-paper">
+        <div className="absolute inset-y-0 -left-px w-0.5 bg-ink" />
+        <div className="absolute left-0 top-1/2 flex h-7 w-7 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-ink ring-2 ring-paper">
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
             <path
               d="M3 3 L1 7 L3 11 M11 3 L13 7 L11 11"

@@ -34,10 +34,10 @@
   --color-dimmer: #525252;
 
   /* Fonts */
-  --font-sans: var(--font-grotesk);
-  --font-serif: var(--font-serif);
+  --font-sans: Arial, Helvetica, sans-serif;
+  --font-serif: var(--font-source-serif, Georgia), serif;
   --font-mono: var(--font-jetbrains);
-  --font-grotesk: var(--font-grotesk);
+  --font-grotesk: var(--font-space-grotesk, Arial), sans-serif;
   --font-display: var(--font-anton);
 }
 
@@ -47,10 +47,12 @@
   --red-2: #b91c1c;
 }
 
+main { scroll-margin-top: 64px; }
+
 body {
   background: var(--color-paper);
   color: var(--color-ink);
-  font-family: var(--font-serif), Georgia, serif;
+  font-family: Arial, Helvetica, sans-serif;
   font-size: 17px;
   line-height: 1.55;
   text-rendering: optimizeLegibility;
