@@ -1,553 +1,614 @@
 import { ScrollHero } from "@/components/scroll-hero";
-import { BroadcastChrome } from "@/components/broadcast-chrome";
-import { ScrollFilmRoom } from "@/components/scroll-film-room";
-import { FCCounter } from "@/components/fc-counter";
-import { FCUpload } from "@/components/fc-upload";
-import { SlamIn } from "@/components/slam-in";
-import { CountUp } from "@/components/count-up";
-
-const socialLinks = [
-  { name: "GitHub", href: "https://github.com/Smokeybear10" },
-  { name: "LinkedIn", href: "https://www.linkedin.com/in/thomasou0/" },
-  { name: "Website", href: "https://thomasou.com/" },
-];
+import {
+  Ticker,
+  Masthead,
+  Abstract,
+  Section,
+  Figure,
+  PipelineSteps,
+  KvGrid,
+  FailGrid,
+  SpecTable,
+  CodeBlock,
+  Code,
+  DemoPlayer,
+  Upload,
+} from "@/components/paper";
+import {
+  TSNDiagram,
+  SAM2Slider,
+  TrainingCurves,
+  ConfidenceTimelineFigure,
+} from "@/components/figures";
+import { researchClips, FAILURES } from "@/lib/research-data";
 
 export default function Home() {
-  return (
-    <main className="relative z-10 bg-black text-white font-[family-name:var(--font-barlow)] overflow-x-clip">
-      {/* ══════════════════════════════════════════════════════════════ */}
-      {/* BROADCAST CHROME — fixed, appears at weigh-in                   */}
-      {/* ══════════════════════════════════════════════════════════════ */}
-      <BroadcastChrome />
+  const knockdownClip = researchClips.find((c) => c.id === "knockdown")!;
 
-      {/* ══════════════════════════════════════════════════════════════ */}
-      {/* HERO — cinematic scroll-scrubbed sequence                       */}
-      {/* ══════════════════════════════════════════════════════════════ */}
+  return (
+    <main id="main" className="relative bg-paper text-ink">
+      {/* CINEMATIC INTRO — preserved scroll-scrubbed fight sequence. */}
       <ScrollHero />
 
-      {/* ══════════════════════════════════════════════════════════════ */}
-      {/* HIGHLIGHT REEL — stat callouts between rounds                   */}
-      {/* ══════════════════════════════════════════════════════════════ */}
-      <section className="border-t-2 border-b-2 border-[#dc2626] bg-[#0a0000] py-6">
-        <div className="max-w-[1100px] mx-auto px-5 flex items-center justify-between gap-6 flex-wrap">
-          <SlamIn variant="sweep" delay={0}>
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-[#dc2626] live-dot" />
-              <span className="text-[9px] font-black tracking-[4px] uppercase text-[#f59e0b] font-[family-name:var(--font-oswald)]">
-                Highlight Reel
-              </span>
-            </div>
-          </SlamIn>
-          {[
-            ["< 1 min", "Training time"],
-            ["1 GPU", "Consumer grade"],
-            ["1 weekend", "To label"],
-            ["3 clips", "Held-out"],
-          ].map(([val, lbl], i) => (
-            <SlamIn key={lbl} variant="slam" delay={100 + i * 80}>
-              <div className="text-center">
-                <div className="text-[22px] font-black text-white leading-none font-[family-name:var(--font-anton)]">
-                  {val}
-                </div>
-                <div className="text-[8px] font-mono tracking-[2px] uppercase text-white/50 mt-1">
-                  {lbl}
-                </div>
-              </div>
-            </SlamIn>
-          ))}
-        </div>
-      </section>
+      {/* Sticky research ticker — engages once the intro is past. */}
+      <Ticker />
 
-      {/* ══════════════════════════════════════════════════════════════ */}
-      {/* CHAPTER 1 — WEIGH-IN 38 (sticky)                                */}
-      {/* ══════════════════════════════════════════════════════════════ */}
-      <section
-        id="weigh-in"
-        className="sticky top-0 min-h-screen bg-black flex items-center justify-center overflow-hidden relative px-5"
-      >
-        <FCCounter />
-      </section>
-
-      {/* ══════════════════════════════════════════════════════════════ */}
-      {/* THREE ROUNDS — Pipeline with slam-in numerals                   */}
-      {/* ══════════════════════════════════════════════════════════════ */}
-      <section className="sticky top-0 min-h-screen mt-[30vh] bg-[#0a0000] flex items-center overflow-hidden relative px-5">
-        <div className="max-w-[1100px] mx-auto w-full relative border-2 border-white/10 p-6 sm:p-10">
-          {/* Corner marks */}
-          <div className="absolute -top-px -left-px w-6 h-6 border-l-[3px] border-t-[3px] border-[#f59e0b]" />
-          <div className="absolute -top-px -right-px w-6 h-6 border-r-[3px] border-t-[3px] border-[#f59e0b]" />
-          <div className="absolute -bottom-px -left-px w-6 h-6 border-l-[3px] border-b-[3px] border-[#f59e0b]" />
-          <div className="absolute -bottom-px -right-px w-6 h-6 border-r-[3px] border-b-[3px] border-[#f59e0b]" />
-
-          {/* Fight card header */}
-          <div className="text-center mb-2">
-            <SlamIn variant="sweep" delay={0}>
-              <div className="text-[9px] font-black tracking-[6px] uppercase text-[#f59e0b] mb-4 font-[family-name:var(--font-oswald)]">
-                ● Main Card · Bout 02 ●
-              </div>
-            </SlamIn>
-            <div className="flex items-center justify-center gap-3 mb-5">
-              <div className="w-12 h-[2px] bg-[#dc2626]" />
-              <div className="w-1.5 h-1.5 rotate-45 bg-[#dc2626]" />
-              <div className="w-12 h-[2px] bg-[#dc2626]" />
-            </div>
-          </div>
-
-          <SlamIn variant="slam" delay={150}>
-            <div className="text-center mb-4">
-              <h2 className="text-[56px] sm:text-[88px] font-black tracking-[2px] uppercase leading-[0.9] text-white font-[family-name:var(--font-anton)]">
-                Three Rounds.
-                <br />
-                <span className="text-[#dc2626] drop-shadow-[0_0_20px_rgba(220,38,38,0.4)]">
-                  One Decision.
-                </span>
-              </h2>
-            </div>
-          </SlamIn>
-
-          <SlamIn variant="sweep" delay={300}>
-            <div className="text-center mb-8 text-[11px] font-black tracking-[4px] uppercase text-white/60 font-[family-name:var(--font-oswald)]">
-              Segment · Annotate · Classify
-            </div>
-          </SlamIn>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-px bg-[#dc2626] relative">
-            {[
-              {
-                round: 1,
-                title: "Segment",
-                tagline: "Isolate the fighters",
-                desc: "SAM2 strips the broadcast. No cage. No crowd. No Monster logos. The classifier sees silhouettes, not television.",
-                stats: [
-                  ["Tool", "SAM2"],
-                  ["Output", "Per-frame masks"],
-                ],
-              },
-              {
-                round: 2,
-                title: "Annotate",
-                tagline: "Label the moments",
-                desc: "38 five-frame windows marked by hand. 19 strikes, 19 neutral. Label Studio. One weekend at a kitchen table.",
-                stats: [
-                  ["Windows", "38"],
-                  ["Frames each", "5"],
-                ],
-              },
-              {
-                round: 3,
-                title: "Classify",
-                tagline: "Call the strike",
-                desc: "Temporal Segment Network fine-tuned from Kinetics-400. One confidence score every five frames. Strike or neutral.",
-                stats: [
-                  ["Backbone", "TSN"],
-                  ["Pretrain", "Kinetics-400"],
-                ],
-              },
-            ].map((r, i) => (
-              <SlamIn key={r.round} variant="slam" delay={i * 150}>
-                <div className="bg-black p-8 relative min-h-[340px] group h-full">
-                  {/* Round label */}
-                  <div className="flex items-end gap-3 mb-4">
-                    <div className="text-[88px] font-black leading-none text-[#dc2626] tabular-nums font-[family-name:var(--font-anton)] drop-shadow-[0_0_20px_rgba(220,38,38,0.4)]">
-                      {r.round}
-                    </div>
-                    <div className="pb-2">
-                      <div className="text-[9px] font-black tracking-[3px] uppercase text-[#f59e0b] font-[family-name:var(--font-oswald)]">
-                        Round {r.round}
-                      </div>
-                      <div className="text-[28px] font-black tracking-wide uppercase text-white leading-none font-[family-name:var(--font-oswald)]">
-                        {r.title}
-                      </div>
-                      <div className="text-[10px] font-mono tracking-[2px] uppercase text-white/50 mt-1">
-                        {r.tagline}
-                      </div>
-                    </div>
-                  </div>
-                  <p className="text-[13px] text-white/70 leading-relaxed mb-5">
-                    {r.desc}
-                  </p>
-                  {/* Mini stats */}
-                  <div className="mt-auto pt-4 border-t border-[#dc2626]/40 grid grid-cols-2 gap-3">
-                    {r.stats.map(([k, v]) => (
-                      <div key={k}>
-                        <div className="text-[8px] font-mono tracking-[2px] uppercase text-[#f59e0b]">
-                          {k}
-                        </div>
-                        <div className="text-[13px] font-black tracking-wide uppercase text-white font-[family-name:var(--font-oswald)] mt-0.5">
-                          {v}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </SlamIn>
-            ))}
-          </div>
-
-          {/* Bottom divider */}
-          <div className="flex items-center justify-center gap-3 mt-6">
-            <div className="w-12 h-[2px] bg-[#dc2626]" />
-            <div className="w-1.5 h-1.5 rotate-45 bg-[#dc2626]" />
-            <div className="w-12 h-[2px] bg-[#dc2626]" />
-          </div>
-        </div>
-      </section>
-
-      {/* ══════════════════════════════════════════════════════════════ */}
-      {/* 150MS — scroll-linked giant number + frame-pop cards            */}
-      {/* ══════════════════════════════════════════════════════════════ */}
-      <section id="the-call" className="sticky top-0 min-h-screen mt-[30vh] bg-black flex items-center overflow-hidden relative px-5">
-        {/* Diagonal red slash background */}
-        <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-[280px] bg-gradient-to-r from-transparent via-[#dc2626]/8 to-transparent skew-y-[-2deg] pointer-events-none" />
-
-        <div className="max-w-[1200px] mx-auto relative w-full border-2 border-white/10 p-6 sm:p-10">
-          {/* Corner marks */}
-          <div className="absolute -top-px -left-px w-6 h-6 border-l-[3px] border-t-[3px] border-[#f59e0b]" />
-          <div className="absolute -top-px -right-px w-6 h-6 border-r-[3px] border-t-[3px] border-[#f59e0b]" />
-          <div className="absolute -bottom-px -left-px w-6 h-6 border-l-[3px] border-b-[3px] border-[#f59e0b]" />
-          <div className="absolute -bottom-px -right-px w-6 h-6 border-r-[3px] border-b-[3px] border-[#f59e0b]" />
-
-          {/* Fight card header */}
-          <SlamIn variant="sweep" delay={0}>
-            <div className="text-center mb-6">
-              <div className="text-[9px] font-black tracking-[6px] uppercase text-[#f59e0b] mb-3 font-[family-name:var(--font-oswald)]">
-                ● Main Event · Bout 03 ●
-              </div>
-              <div className="flex items-center justify-center gap-3">
-                <div className="w-12 h-[2px] bg-[#dc2626]" />
-                <div className="w-1.5 h-1.5 rotate-45 bg-[#dc2626]" />
-                <div className="w-12 h-[2px] bg-[#dc2626]" />
-              </div>
-            </div>
-          </SlamIn>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-14 items-center">
-            <div>
-              <div className="scroll-scale-hero origin-left text-[110px] sm:text-[180px] font-black leading-[0.8] text-white font-[family-name:var(--font-anton)] tracking-tight">
-                150
-                <span className="text-[52px] sm:text-[72px] text-[#f59e0b] tracking-wider ml-2 align-top">
-                  MS
-                </span>
-              </div>
-              <SlamIn variant="sweep" delay={100}>
-                <div className="text-[30px] sm:text-[40px] font-black tracking-[2px] uppercase text-[#dc2626] mt-2 font-[family-name:var(--font-oswald)] leading-none">
-                  5 Frames. 1 Decision.
-                </div>
-              </SlamIn>
-              <SlamIn variant="sweep" delay={250}>
-                <div className="mt-6 border-l-[4px] border-[#f59e0b] pl-4">
-                  <p className="text-[15px] text-white/80 max-w-[440px] leading-relaxed">
-                    A strike lands in 150 milliseconds. Five frames at 30fps. Not a
-                    wind-up, not a follow-through, the whole thing. The model
-                    reads the full sequence at once, calls strike or neutral.
-                    <span className="text-[#f59e0b] font-bold">
-                      {" "}
-                      That&apos;s the fight.
-                    </span>
-                  </p>
-                </div>
-              </SlamIn>
-            </div>
-
-            <SlamIn variant="clip-reveal" delay={0}>
-              <div className="relative">
-                {/* Judge scorecard */}
-                <div className="border-[3px] border-[#f59e0b] bg-black p-5 shadow-[0_0_40px_rgba(245,158,11,0.15)]">
-                  <div className="flex items-center justify-between mb-4 pb-3 border-b-2 border-[#f59e0b]/40">
-                    <div className="flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-[#dc2626] live-dot" />
-                      <span className="text-[10px] font-black tracking-[3px] uppercase text-[#f59e0b] font-[family-name:var(--font-oswald)]">
-                        Judge&apos;s Scorecard
-                      </span>
-                    </div>
-                    <span className="text-[9px] font-mono tracking-[2px] text-white/60">
-                      WIN 15 · ROUND 02
-                    </span>
-                  </div>
-
-                  {/* 5 frames */}
-                  <div className="grid grid-cols-5 gap-2">
-                    {[0, 1, 2, 3, 4].map((i) => (
-                      <div
-                        key={i}
-                        className="animate-frame-pop aspect-square border-2 border-[#f59e0b]/70 bg-[#0a0000] flex items-center justify-center relative overflow-hidden"
-                        style={{ animationDelay: `${400 + i * 120}ms` }}
-                      >
-                        {/* Progress bar */}
-                        <div
-                          className="absolute bottom-0 left-0 h-[3px] bg-[#dc2626] animate-bar-fill"
-                          style={{
-                            width: `${20 * (i + 1)}%`,
-                            animationDelay: `${600 + i * 120}ms`,
-                          }}
-                        />
-                        <span className="text-[14px] font-black text-[#f59e0b] font-[family-name:var(--font-oswald)]">
-                          F{i + 1}
-                        </span>
-                        <span className="absolute top-1 right-1 text-[7px] font-mono text-white/60">
-                          {String(i * 33).padStart(3, "0")}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Bracket */}
-                  <div className="flex items-center gap-2 mt-3">
-                    <div className="flex-1 h-2 border-t-2 border-l-2 border-[#f59e0b]" />
-                    <span className="text-[8px] font-black tracking-[3px] uppercase text-[#f59e0b] whitespace-nowrap font-[family-name:var(--font-oswald)]">
-                      1 Window · 1 Prediction
-                    </span>
-                    <div className="flex-1 h-2 border-t-2 border-r-2 border-[#f59e0b]" />
-                  </div>
-
-                  {/* Verdict */}
-                  <div className="mt-5 pt-4 border-t-2 border-[#f59e0b]/40 flex items-end justify-between">
-                    <div>
-                      <div className="text-[8px] font-mono tracking-[2px] uppercase text-white/60">
-                        Confidence
-                      </div>
-                      <div className="text-[44px] font-black text-[#f59e0b] font-mono tabular-nums leading-none">
-                        <CountUp target={0.847} decimals={3} duration={1800} />
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <SlamIn variant="stamp" delay={1200}>
-                        <div className="text-[8px] font-mono tracking-[2px] uppercase text-white/60">
-                          Verdict
-                        </div>
-                        <div className="text-[24px] font-black tracking-[3px] text-[#dc2626] font-[family-name:var(--font-oswald)] drop-shadow-[0_0_8px_rgba(220,38,38,0.6)]">
-                          STRIKE
-                        </div>
-                      </SlamIn>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </SlamIn>
-          </div>
-
-          {/* Bottom divider */}
-          <div className="flex items-center justify-center gap-3 mt-8">
-            <div className="w-12 h-[2px] bg-[#dc2626]" />
-            <div className="w-1.5 h-1.5 rotate-45 bg-[#dc2626]" />
-            <div className="w-12 h-[2px] bg-[#dc2626]" />
-          </div>
-        </div>
-      </section>
-
-      {/* ══════════════════════════════════════════════════════════════ */}
-      {/* FILM ROOM — scroll-driven clip switching (3 clips × 1vh each)   */}
-      {/* ══════════════════════════════════════════════════════════════ */}
-      <ScrollFilmRoom />
-
-      {/* ══════════════════════════════════════════════════════════════ */}
-      {/* REPLAY — Scroll-draw confidence curve                           */}
-      {/* ══════════════════════════════════════════════════════════════ */}
-      <section className="sticky top-0 z-10 min-h-screen -mt-[100vh] bg-[#0a0000] flex items-center overflow-hidden px-5">
-        <div className="max-w-[980px] mx-auto w-full relative border-2 border-white/10 p-6 sm:p-10">
-          {/* Corner marks */}
-          <div className="absolute -top-px -left-px w-6 h-6 border-l-[3px] border-t-[3px] border-[#f59e0b]" />
-          <div className="absolute -top-px -right-px w-6 h-6 border-r-[3px] border-t-[3px] border-[#f59e0b]" />
-          <div className="absolute -bottom-px -left-px w-6 h-6 border-l-[3px] border-b-[3px] border-[#f59e0b]" />
-          <div className="absolute -bottom-px -right-px w-6 h-6 border-r-[3px] border-b-[3px] border-[#f59e0b]" />
-
-          {/* Fight card header */}
-          <SlamIn variant="sweep" delay={0}>
-            <div className="text-center mb-3">
-              <div className="text-[9px] font-black tracking-[6px] uppercase text-[#f59e0b] mb-3 font-[family-name:var(--font-oswald)]">
-                ● Replay · Bout 04 ●
-              </div>
-              <div className="flex items-center justify-center gap-3">
-                <div className="w-12 h-[2px] bg-[#dc2626]" />
-                <div className="w-1.5 h-1.5 rotate-45 bg-[#dc2626]" />
-                <div className="w-12 h-[2px] bg-[#dc2626]" />
-              </div>
-            </div>
-          </SlamIn>
-
-          <SlamIn variant="slam" delay={150}>
-            <h2 className="text-center text-[44px] sm:text-[64px] font-black tracking-[2px] uppercase leading-[0.95] text-white font-[family-name:var(--font-anton)] mb-2">
-              Every 5 Frames.
-              <br />
-              <span className="text-[#dc2626] drop-shadow-[0_0_20px_rgba(220,38,38,0.4)]">
-                One Confidence Score.
-              </span>
-            </h2>
-          </SlamIn>
-
-          {/* Confidence curve */}
-          <SlamIn variant="clip-reveal" delay={300}>
-            <div className="mt-8">
-              {/* Chart area */}
-              <div className="relative">
-                {/* Y-axis labels */}
-                <div className="absolute -left-1 top-0 bottom-0 flex flex-col justify-between text-[7px] font-mono text-white/50 -translate-x-full pr-2">
-                  <span>1.0</span>
-                  <span>0.5</span>
-                  <span>0.0</span>
-                </div>
-
-                <svg viewBox="0 0 100 40" className="w-full h-40 sm:h-48">
-                  <defs>
-                    <linearGradient id="replay-grad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.4" />
-                      <stop offset="100%" stopColor="#dc2626" stopOpacity="0" />
-                    </linearGradient>
-                  </defs>
-                  {/* Threshold line at 0.5 */}
-                  <line x1="0" y1="20" x2="100" y2="20" stroke="#dc2626" strokeWidth="0.3" strokeDasharray="2,2" vectorEffect="non-scaling-stroke" />
-                  {/* Fill */}
-                  <polygon
-                    points="0,40 0,33 5,30 10,26 15,23 20,17 25,12 30,6 33,3 36,1 40,5 44,12 48,20 52,16 56,10 60,4 64,9 68,17 72,26 76,33 80,36 84,38 88,39 92,37 96,36 100,35 100,40"
-                    fill="url(#replay-grad)"
-                  />
-                  {/* Line */}
-                  <polyline
-                    className="scroll-draw-path"
-                    points="0,33 5,30 10,26 15,23 20,17 25,12 30,6 33,3 36,1 40,5 44,12 48,20 52,16 56,10 60,4 64,9 68,17 72,26 76,33 80,36 84,38 88,39 92,37 96,36 100,35"
-                    fill="none"
-                    stroke="#f59e0b"
-                    strokeWidth="1.2"
-                    vectorEffect="non-scaling-stroke"
-                  />
-                  {/* Peak dots */}
-                  <circle cx="36" cy="1" r="0.8" fill="#dc2626" />
-                  <circle cx="60" cy="4" r="0.8" fill="#dc2626" />
-                </svg>
-              </div>
-
-              {/* Stats row */}
-              <div className="mt-4 pt-4 border-t border-white/10 grid grid-cols-4 gap-6">
-                <div>
-                  <div className="text-[8px] font-mono tracking-[2px] uppercase text-white/60 mb-1">Peak</div>
-                  <div className="text-[24px] font-black text-[#f59e0b] font-[family-name:var(--font-anton)] leading-none">
-                    <CountUp target={0.947} decimals={3} duration={1800} />
-                  </div>
-                </div>
-                <div>
-                  <div className="text-[8px] font-mono tracking-[2px] uppercase text-white/60 mb-1">Threshold</div>
-                  <div className="text-[24px] font-black text-white/70 font-[family-name:var(--font-anton)] leading-none">
-                    <CountUp target={0.500} decimals={3} duration={1400} />
-                  </div>
-                </div>
-                <div>
-                  <div className="text-[8px] font-mono tracking-[2px] uppercase text-white/60 mb-1">Strikes</div>
-                  <div className="text-[24px] font-black text-[#dc2626] font-[family-name:var(--font-anton)] leading-none">
-                    <CountUp target={7} duration={1200} />
-                    <span className="text-[14px] text-white/50"> / 38</span>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="text-[8px] font-mono tracking-[2px] uppercase text-white/60 mb-1">Decision</div>
-                  <div className="text-[24px] font-black text-[#dc2626] font-[family-name:var(--font-anton)] leading-none">
-                    KO · R2
-                  </div>
-                </div>
-              </div>
-            </div>
-          </SlamIn>
-        </div>
-      </section>
-
-      {/* ══════════════════════════════════════════════════════════════ */}
-      {/* STEP INTO THE OCTAGON — Upload                                  */}
-      {/* ══════════════════════════════════════════════════════════════ */}
-      <section className="sticky top-0 z-10 min-h-screen mt-[30vh] bg-black flex items-center overflow-hidden relative px-5">
-        <div className="max-w-[900px] mx-auto w-full relative border-2 border-white/10 p-6 sm:p-10">
-          {/* Corner marks */}
-          <div className="absolute -top-px -left-px w-6 h-6 border-l-[3px] border-t-[3px] border-[#f59e0b]" />
-          <div className="absolute -top-px -right-px w-6 h-6 border-r-[3px] border-t-[3px] border-[#f59e0b]" />
-          <div className="absolute -bottom-px -left-px w-6 h-6 border-l-[3px] border-b-[3px] border-[#f59e0b]" />
-          <div className="absolute -bottom-px -right-px w-6 h-6 border-r-[3px] border-b-[3px] border-[#f59e0b]" />
-
-          {/* Fight card header */}
-          <SlamIn variant="sweep" delay={0}>
-            <div className="text-center mb-3">
-              <div className="text-[9px] font-black tracking-[6px] uppercase text-[#f59e0b] mb-3 font-[family-name:var(--font-oswald)]">
-                ● Your Turn · Bout 05 ●
-              </div>
-              <div className="flex items-center justify-center gap-3">
-                <div className="w-12 h-[2px] bg-[#dc2626]" />
-                <div className="w-1.5 h-1.5 rotate-45 bg-[#dc2626]" />
-                <div className="w-12 h-[2px] bg-[#dc2626]" />
-              </div>
-            </div>
-          </SlamIn>
-          <SlamIn variant="slam" delay={150}>
-            <h2 className="text-center text-[48px] sm:text-[72px] font-black tracking-[2px] uppercase leading-[0.95] text-white font-[family-name:var(--font-anton)] mb-4">
-              Book the fight.
-              <br />
-              <span className="text-[#dc2626] drop-shadow-[0_0_20px_rgba(220,38,38,0.4)]">
-                Drop the tape.
-              </span>
-            </h2>
-          </SlamIn>
-          <SlamIn variant="sweep" delay={300}>
-            <p className="text-center text-[14px] text-white/60 max-w-[520px] mx-auto leading-relaxed mb-12">
-              Upload a short MMA clip. The model calls strike or neutral,
-              window by window, in real time. Max 3 seconds.
-            </p>
-          </SlamIn>
-
-          <SlamIn variant="clip-reveal" delay={450}>
-            <FCUpload />
-          </SlamIn>
-        </div>
-      </section>
-
-      {/* ══════════════════════════════════════════════════════════════ */}
-      {/* END OF CARD — Footer                                            */}
-      {/* ══════════════════════════════════════════════════════════════ */}
-      <footer id="footer" className="relative z-10 border-t-[3px] border-[#dc2626] bg-[#0a0000] overflow-hidden mt-[30vh]">
-        {/* Diagonal banner */}
-        <div className="absolute -top-6 inset-x-0 h-10 bg-[#dc2626] skew-y-[-2deg]" />
-
-        <div className="max-w-[1100px] mx-auto px-5 pt-20 pb-10 relative">
-          {/* Decision card */}
-          <SlamIn variant="stamp" delay={0}>
-            <div className="text-center mb-10">
-              <div className="inline-block border-[3px] border-[#f59e0b] bg-black px-10 py-6 relative">
-                <div className="absolute -top-1 -left-1 w-3 h-3 bg-[#f59e0b]" />
-                <div className="absolute -top-1 -right-1 w-3 h-3 bg-[#f59e0b]" />
-                <div className="absolute -bottom-1 -left-1 w-3 h-3 bg-[#f59e0b]" />
-                <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-[#f59e0b]" />
-                <div className="text-[8px] font-black tracking-[6px] uppercase text-[#f59e0b] mb-1 font-[family-name:var(--font-oswald)]">
-                  ● Official Decision ●
-                </div>
-                <div className="text-[32px] sm:text-[44px] font-black tracking-[4px] uppercase text-white font-[family-name:var(--font-anton)] leading-none">
-                  STR<span className="text-[#dc2626]">1</span>KE
-                </div>
-                <div className="text-[9px] font-black tracking-[4px] uppercase text-white/60 mt-1 font-[family-name:var(--font-oswald)]">
-                  by Thomas Ou
-                </div>
-              </div>
-            </div>
-          </SlamIn>
-
-          {/* Socials as corners */}
-          <nav aria-label="Social links" className="flex items-center justify-center gap-10 mb-10">
-            {socialLinks.map((link, i) => (
-              <SlamIn key={link.name} variant="sweep" delay={i * 100}>
+      <div className="mx-auto max-w-[1180px] px-8">
+        {/* ───────────────────────────────  Masthead  ─────────────────────────────── */}
+        <Masthead
+          title={
+            <>
+              Strike detection in MMA broadcast video with a{" "}
+              <em>5-frame</em> temporal classifier on top of SAM2 silhouettes.
+            </>
+          }
+          deck={
+            <>
+              A three-stage pipeline — segment, annotate, classify — that calls
+              strike or neutral on every 5-frame window. Trained on 38
+              hand-labeled windows and a Kinetics-400 prior. This page presents
+              the system, the design decisions, and the failure modes that
+              survive them.
+            </>
+          }
+          meta={[
+            { label: "Author", value: "Thomas Ou" },
+            {
+              label: "Code",
+              value: (
                 <a
-                  href={link.href}
+                  href="https://github.com/Smokeybear10/STR1KE"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-[11px] font-black tracking-[3px] uppercase text-white/60 hover:text-[#f59e0b] transition-colors font-[family-name:var(--font-oswald)]"
+                  className="border-b border-rule hover:border-red-600 hover:text-red-600"
                 >
-                  ▸ {link.name}
+                  github.com/Smokeybear10/STR1KE
                 </a>
-              </SlamIn>
-            ))}
-          </nav>
+              ),
+            },
+            { label: "Source", value: "UFC 308 · Topuria vs. Holloway" },
+            { label: "Read time", value: "≈ 7 min" },
+            {
+              label: "Status",
+              value: <span className="text-red-600">technical preview</span>,
+            },
+          ]}
+        />
 
-          {/* Sanction bar */}
-          <div className="border-t border-[#dc2626]/40 pt-5 flex items-center justify-between text-[9px] font-mono tracking-[2px] uppercase">
-            <span className="text-white/60">MMXXV · Independent</span>
-            <span className="text-[#f59e0b]">End Of Card</span>
-            <span className="text-white/60">Thomas Ou · 2025</span>
+        {/* ───────────────────────────────  Abstract  ─────────────────────────────── */}
+        <Abstract>
+          <p>
+            We fine-tune a Temporal Segment Network (ResNet-50, Kinetics-400
+            pretrain) for binary strike / neutral classification on 5-frame
+            windows of MMA footage. SAM2 segmentation removes the broadcast
+            (cage, crowd, overlays) before classification, reducing the
+            domain-shift burden on a dataset of only 38 hand-labeled windows.
+            The pipeline reaches 0.83 validation accuracy after under one
+            minute of training on a free-tier Colab GPU. A from-scratch 3D CNN
+            baseline never converges — we report both, and discuss where the
+            small-data regime forces transfer learning to do almost all the
+            work.
+          </p>
+        </Abstract>
+
+        {/* ───────────────────────────────  § 01 Problem  ─────────────────────────────── */}
+        <Section
+          id="problem"
+          number="§ 01 · Problem"
+          rail={[
+            {
+              heading: "In one line",
+              body: "A strike lands in roughly 150 ms — five frames at 30 fps. The whole action lives in a window narrower than human reaction time.",
+            },
+            {
+              heading: "Why public datasets fail",
+              body: "Action-recognition corpora (Kinetics, AVA) treat punches as a coarse label across seconds of context. We need the millisecond.",
+            },
+            {
+              heading: "Constraints",
+              body: "Free-tier GPU. One labeler. One weekend. No premium annotation tools.",
+            },
+          ]}
+        >
+          <p>
+            Detecting a strike in broadcast MMA video is, on the surface, a
+            1-class action-recognition problem. Three things make it
+            specifically hard.
+          </p>
+          <p>
+            <strong>Temporal scale.</strong> A jab takes 100–200 ms from
+            initiation to contact. At 30 fps that is five frames. Most
+            action-recognition models read seconds of context; here the entire
+            signal is shorter than a sneeze. Either the model reads all five
+            frames at once, or it misses the action.
+          </p>
+          <p>
+            <strong>Domain noise.</strong> Broadcast footage carries cage
+            geometry, crowd parallax, scorebugs, corporate overlays, and a
+            camera that pans on contact. A naïve classifier will happily learn
+            to predict <em>strike</em> whenever the Monster Energy logo enters
+            frame.
+          </p>
+          <p>
+            <strong>No data.</strong> There is no public, labeled dataset for
+            MMA strike detection. Every sample in this work was created from
+            scratch.
+          </p>
+        </Section>
+
+        {/* ───────────────────────────────  § 02 First attempt  ─────────────────────────────── */}
+        <Section
+          id="ablation"
+          number="§ 02 · First attempt — 3D CNN from scratch"
+          rail={[
+            {
+              heading: "What we tried",
+              body: "Custom 3D CNN. 4-channel input (RGB + SAM2 mask). Conv3D → MaxPool3D → GAP → FC.",
+            },
+            {
+              heading: "Result",
+              body: "Validation accuracy stuck at 37.5% across all 20 epochs. The model never learned.",
+            },
+            {
+              heading: "Lesson",
+              body: "n = 38 cannot teach a randomly-initialized 3D conv anything about human motion.",
+            },
+          ]}
+          extras={
+            <Figure
+              number="FIG 01"
+              title="20-epoch training comparison"
+              scale="n=38 · Colab T4"
+              caption={
+                <>
+                  <strong>Solid:</strong> TSN with K400 pretrain, head-only
+                  fine-tune (introduced in §03). <strong>Dashed:</strong> 3D
+                  CNN trained from scratch on RGB + mask. The 3D-CNN curve is
+                  reconstructed from logged values — flat at 37.5% is the
+                  literal result we observed. The takeaway is not that 3D
+                  convolutions are wrong for this task; it is that, in the
+                  small-data regime, transfer learning beats theoretically-
+                  better-suited architectures that lack a useful prior.
+                </>
+              }
+            >
+              <TrainingCurves />
+            </Figure>
+          }
+        >
+          <p>
+            The architecturally cleaner option came first: a small 3D CNN that
+            ingests RGB and the SAM2 mask jointly as a 4-channel volume. The
+            hypothesis was that explicit mask information, fed end-to-end,
+            would let the network learn fighter-aware spatiotemporal features.
+          </p>
+          <p>
+            It never converged. With 38 training samples, no pretrain is
+            available for 4-channel 3D convolutions; the model is initialized
+            from scratch and asked to learn human-motion priors from a
+            kitchen-table dataset. Validation accuracy flatlined at the
+            majority baseline.
+          </p>
+          <p>
+            The pivot: trade architectural elegance for a strong prior.
+            ResNet-50 has already seen{" "}
+            <strong>~300 K Kinetics-400 video clips</strong> covering human
+            action. Fine-tuning only adapts the final layer. The backbone does
+            the heavy lifting; the head learns the strike/neutral boundary.
+            That move is the whole pipeline below.
+          </p>
+        </Section>
+
+        {/* ───────────────────────────────  § 03 Pipeline  ─────────────────────────────── */}
+        <Section
+          id="pipeline"
+          number="§ 03 · Pipeline"
+          rail={[
+            {
+              heading: "Three stages",
+              body: "Each stage emits artifacts the next consumes. SAM2 masks → frame folders → softmax.",
+            },
+            {
+              heading: "Format",
+              body: (
+                <>
+                  MMAction2 RawframeDataset. Per-clip JPEG folders. Annotation
+                  is one line per window:{" "}
+                  <span className="font-mono">path n_frames label</span>.
+                </>
+              ),
+            },
+          ]}
+          extras={
+            <>
+              <PipelineSteps
+                steps={[
+                  {
+                    number: "Stage 01",
+                    title: "Segment",
+                    role: "SAM2 · Meta",
+                    description:
+                      "Promptable segmentation, prompted once per fighter on frame 0 of a clip. SAM2's streaming memory propagates masks forward through fast occlusion and overlapping bodies — exactly the failure modes that defeat simpler trackers.",
+                    meta: [
+                      { label: "Input", value: "RGB frames" },
+                      { label: "Output", value: "per-frame binary mask" },
+                      { label: "Prompt", value: "1 click / fighter" },
+                    ],
+                  },
+                  {
+                    number: "Stage 02",
+                    title: "Annotate",
+                    role: "Label Studio · SAM2 backend",
+                    description:
+                      "38 five-frame windows hand-verified over one weekend at a kitchen table. Balanced 19 / 19. Without ML-assisted propagation (premium-only), every mask had to be inspected manually — the bottleneck is the eye, not the GPU.",
+                    meta: [
+                      { label: "Windows", value: "38 (19 strike · 19 neutral)" },
+                      { label: "Frames each", value: "5 @ 30 fps" },
+                      { label: "Split", value: "30 / 6 / 2" },
+                    ],
+                  },
+                  {
+                    number: "Stage 03",
+                    title: "Classify",
+                    role: "TSN · ResNet-50 · K400 pretrain",
+                    description:
+                      "Temporal Segment Network. Each of the 5 frames passes through a shared ResNet-50; features are averaged into a single 2048-d vector; a fresh FC head produces the binary softmax. Backbone frozen, head fine-tuned.",
+                    meta: [
+                      {
+                        label: "Pretrain",
+                        value: "tsn_r50_1x1x3_100e_k400",
+                      },
+                      { label: "Epochs", value: "20" },
+                      { label: "Train time", value: "< 1 min · 1 GPU" },
+                    ],
+                  },
+                ]}
+              />
+
+              <Figure
+                number="FIG 02"
+                title="Drag to reveal: SAM2 mask vs. broadcast frame"
+                scale="stage 01"
+                caption={
+                  <>
+                    The classifier never sees the left side; it sees only the
+                    right. Removing the broadcast before classification
+                    sidesteps the bulk of domain-shift, which the dataset is
+                    too small to absorb directly. Background-removal as
+                    preprocessing — not as architecture — is the single most
+                    consequential design decision in the project.
+                  </>
+                }
+              >
+                <SAM2Slider />
+              </Figure>
+
+              <Figure
+                number="FIG 03"
+                title="TSN forward pass on one 5-frame window"
+                scale="stage 03"
+                caption={
+                  <>
+                    Sparse sampling: TSN was designed for untrimmed video, but
+                    its consensus rule — average per-frame features before the
+                    head — is exactly right for our 5-frame window. The model
+                    is forced to pick up patterns that hold across the whole
+                    strike, not single-frame artifacts.
+                  </>
+                }
+              >
+                <TSNDiagram />
+              </Figure>
+            </>
+          }
+        >
+          <p>
+            The system is staged so each step is independently inspectable.
+            Mask quality can be audited without re-running training; classifier
+            output can be re-aggregated without re-running segmentation.
+          </p>
+        </Section>
+
+        {/* ───────────────────────────────  § 04 Results  ─────────────────────────────── */}
+        <Section
+          id="results"
+          number="§ 04 · Results"
+          rail={[
+            {
+              heading: "What this shows",
+              body: "Per-window confidence on the Knockdown clip. Three real strike events sit clearly above the threshold; the rest is appropriately quiet.",
+            },
+            {
+              heading: "What it can't show",
+              body: "n = 38 means error bars are essentially the entire range. Read this as a working pipeline, not a benchmark.",
+            },
+          ]}
+          extras={
+            <>
+              <KvGrid
+                items={[
+                  {
+                    k: "val accuracy",
+                    v: "0.83",
+                    sub: "5 / 6 windows",
+                    emphasize: true,
+                  },
+                  {
+                    k: "peak confidence",
+                    v: "0.98",
+                    sub: "pressure clip · w13",
+                  },
+                  {
+                    k: "3D CNN baseline",
+                    v: "0.375",
+                    sub: "majority-class",
+                  },
+                  {
+                    k: "train time",
+                    v: "< 60 s",
+                    sub: "colab T4 · 20 epochs",
+                  },
+                ]}
+              />
+
+              <Figure
+                number="FIG 04"
+                title="Per-window P(strike) on Knockdown clip · interactive"
+                scale={`${knockdownClip.predictions.length} windows · ${knockdownClip.totalFrames} frames · ${(knockdownClip.totalFrames / knockdownClip.fps).toFixed(1)} s`}
+                caption={
+                  <>
+                    Each x-tick is one 5-frame window. Red dots mark
+                    above-threshold local maxima; the dashed line is the 0.5
+                    decision boundary. The three peaks at{" "}
+                    <span className="font-mono">w3</span>,{" "}
+                    <span className="font-mono">w20</span> and{" "}
+                    <span className="font-mono">w35</span> correspond to the
+                    left hook, the follow-up ground strike, and the referee&apos;s
+                    intervention motion respectively — the model is detecting
+                    all three and quieting in between.
+                  </>
+                }
+              >
+                <ConfidenceTimelineFigure clip={knockdownClip} />
+              </Figure>
+            </>
+          }
+        >
+          <p>
+            The plot below is the model&apos;s softmax output, window-by-window,
+            on the Knockdown clip. Hover anywhere to read the underlying
+            numbers.
+          </p>
+        </Section>
+
+        {/* ───────────────────────────────  § 05 Failures  ─────────────────────────────── */}
+        <Section
+          id="failures"
+          number="§ 05 · What the model gets wrong"
+          rail={[
+            {
+              heading: "Honest limits",
+              body: "One source fight. One labeler. No multi-fighter generalization claim is made.",
+            },
+            {
+              heading: "Recurring patterns",
+              body: "Clinch breaks, missed jabs, and strikes that straddle non-overlapping windows.",
+            },
+          ]}
+          extras={<FailGrid items={FAILURES} />}
+        >
+          <p>
+            Three failure modes recur across the test clips. They are not
+            bugs; they are the load-bearing limits of a 38-sample classifier
+            with no temporal context between windows.
+          </p>
+        </Section>
+
+        {/* ───────────────────────────────  § 06 Future  ─────────────────────────────── */}
+        <Section
+          id="future"
+          number="§ 06 · What ten times the data would change"
+          rail={[
+            {
+              heading: "Bottleneck",
+              body: "Labeled windows. Everything else is configured.",
+            },
+            {
+              heading: "Order of operations",
+              body: "1 · more annotation. 2 · multi-class. 3 · sliding windows. 4 · multi-fight.",
+            },
+          ]}
+        >
+          <p>
+            The 0.83 number is a ceiling against the 38-window dataset, not
+            against the task. The path from here is unglamorous:{" "}
+            <strong>more annotation</strong>. Even 200–500 windows would be
+            transformative. With ML-assisted propagation the same weekend
+            yields ~10× the data.
+          </p>
+          <p>
+            Beyond volume, three structural changes are queued.{" "}
+            <strong>Multi-class labels</strong> (jab, cross, hook, kick,
+            elbow, knee, takedown) make the output useful for fight analytics,
+            not just highlight detection.{" "}
+            <strong>Overlapping sliding windows</strong> recover strikes that
+            currently fragment across the boundary at{" "}
+            <span className="font-mono">w14/w15</span>.{" "}
+            <strong>Multi-fight, multi-fighter</strong> training breaks the
+            implicit overfit to Topuria&apos;s stance and Holloway&apos;s
+            volume.
+          </p>
+        </Section>
+
+        {/* ───────────────────────────────  § 07 Reproducibility  ─────────────────────────────── */}
+        <Section
+          id="repro"
+          number="§ 07 · Reproducibility"
+          rail={[
+            {
+              heading: "Stack",
+              body: "MMAction2 · PyTorch · SAM2 · Label Studio",
+            },
+            {
+              heading: "Hardware",
+              body: "Single Colab T4 (free tier)",
+            },
+            {
+              heading: "Determinism",
+              body: "Seed 42 · cudnn benchmark off",
+            },
+          ]}
+          extras={
+            <>
+              <CodeBlock>
+                <Code.comment>
+                  # annotations/train.txt — MMAction2 RawframeDataset format
+                </Code.comment>
+                {"\n"}
+                <Code.comment>
+                  {"# <folder> <n_frames> <class_label>   (0 = neutral, 1 = strike)"}
+                </Code.comment>
+                {"\n\n"}
+                {"strike/0  5 1\n"}
+                {"strike/1  5 1\n"}
+                {"neutral/0 5 0\n"}
+                {"neutral/1 5 0\n"}
+                <Code.comment>...</Code.comment>
+                {"\n\n"}
+                <Code.comment># inference (per clip)</Code.comment>
+                {"\n"}
+                <Code.keyword>from</Code.keyword>
+                {" mmaction.apis "}
+                <Code.keyword>import</Code.keyword>
+                {" inference_recognizer, init_recognizer\n\n"}
+                {"model  = init_recognizer("}
+                <Code.string>{"'configs/tsn_r50_strike.py'"}</Code.string>
+                {", "}
+                <Code.string>{"'work_dirs/best.pth'"}</Code.string>
+                {")\n"}
+                {"result = inference_recognizer(model, "}
+                <Code.string>{"'window_w20.mp4'"}</Code.string>
+                {")\n"}
+                <Code.comment>
+                  # result.pred_score → tensor([0.04, 0.96])  →  STRIKE @ 0.96
+                </Code.comment>
+              </CodeBlock>
+
+              <SpecTable
+                rows={[
+                  {
+                    setting: "backbone",
+                    value: "ResNet-50",
+                    notes:
+                      "ImageNet → Kinetics-400 → frozen during fine-tune",
+                  },
+                  {
+                    setting: "checkpoint",
+                    value: "tsn_r50_1x1x3_100e_kinetics400_rgb",
+                    notes: "OpenMMLab model zoo",
+                  },
+                  {
+                    setting: "input",
+                    value: "5 × 224 × 224 RGB",
+                    notes: "center crop · ImageNet norm",
+                  },
+                  {
+                    setting: "head",
+                    value: "FC 2048 → 2 · softmax",
+                    notes: "only learnable parameters",
+                  },
+                  {
+                    setting: "optimizer",
+                    value: "SGD · lr 0.001 · momentum 0.9",
+                    notes: "linear warmup · cosine decay",
+                  },
+                  {
+                    setting: "epochs",
+                    value: "20",
+                    notes: "val acc converged by epoch 9",
+                  },
+                  {
+                    setting: "data format",
+                    value: "RawframeDataset",
+                    notes: "JPEG sequences, not video files",
+                  },
+                ]}
+              />
+            </>
+          }
+        >
+          <p>
+            The annotation format is intentionally simple. Each line in{" "}
+            <span className="font-mono">train.txt</span> is a folder, a frame
+            count, and an integer class label — readable by MMAction2&apos;s
+            RawframeDataset out of the box.
+          </p>
+        </Section>
+
+        {/* ───────────────────────────────  § 08 Live inference  ─────────────────────────────── */}
+        <section
+          id="demo"
+          className="border-b border-rule pb-22 pt-22"
+        >
+          <div className="mb-3.5 font-mono text-[11px] uppercase tracking-[0.22em] text-red-600">
+            § 08 · Live inference
           </div>
-        </div>
-      </footer>
+          <h2 className="mb-7 max-w-[720px] font-serif text-[clamp(28px,3.5vw,40px)] font-normal leading-[1.15] tracking-[-0.01em] text-ink">
+            The model, running on three held-out clips.
+          </h2>
+          <DemoPlayer clips={researchClips} />
+        </section>
+
+        {/* ───────────────────────────────  § 09 Try it  ─────────────────────────────── */}
+        <section id="try" className="border-b border-rule py-22">
+          <div className="mb-3.5 font-mono text-[11px] uppercase tracking-[0.18em] text-red-600">
+            § 09 · Try it
+          </div>
+          <h2 className="mb-7 max-w-[720px] font-serif text-[clamp(28px,3.5vw,40px)] font-normal leading-[1.15] tracking-[-0.01em] text-ink">
+            Run the pipeline on a clip you choose.
+          </h2>
+          <div className="max-w-[760px]">
+            <Upload />
+          </div>
+        </section>
+
+        {/* ───────────────────────────────  Footer  ─────────────────────────────── */}
+        <footer className="py-14 font-mono text-[11px] uppercase tracking-[0.14em] text-ink-dim">
+          <div className="flex flex-wrap items-center justify-between gap-8">
+            <span>STR1KE · technical preview · MMXXVI</span>
+            <span className="font-serif text-[12px] italic normal-case tracking-normal">
+              Built by{" "}
+              <a
+                href="https://thomasou.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-ink hover:text-red-600"
+              >
+                Thomas Ou
+              </a>
+            </span>
+            <span className="flex gap-4">
+              <a
+                href="https://github.com/Smokeybear10"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-ink hover:text-red-600"
+              >
+                github
+              </a>
+              <span aria-hidden>·</span>
+              <a
+                href="https://www.linkedin.com/in/thomasou0/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-ink hover:text-red-600"
+              >
+                linkedin
+              </a>
+            </span>
+          </div>
+        </footer>
+      </div>
     </main>
   );
 }

@@ -1,8 +1,25 @@
 @import "tailwindcss";
 
 @theme inline {
-  --color-background: #000000;
-  --color-foreground: #ffffff;
+  /* Paper / research palette — primary */
+  --color-paper: #0a0a0a;
+  --color-paper-2: #121212;
+  --color-paper-3: #1a1a1a;
+  --color-ink: #e8e6e1;
+  --color-ink-mute: #b8b5af;
+  --color-ink-dim: #8a877f;
+  --color-ink-faint: #5a5852;
+  --color-rule: #2a2826;
+  --color-amber: #d4a64a;
+  --color-red-2: #b91c1c;
+
+  /* Override Tailwind 4's red palette to match the mockup (#dc2626 / #b91c1c) */
+  --color-red-600: #dc2626;
+  --color-red-700: #b91c1c;
+
+  /* Broadcast / cinematic palette — preserved for /variants/cinematic */
+  --color-background: #0a0a0a;
+  --color-foreground: #e8e6e1;
   --color-strike-red: #dc2626;
   --color-strike-red-deep: #991b1b;
   --color-strike-gold: #f59e0b;
@@ -15,30 +32,37 @@
   --color-muted: #a3a3a3;
   --color-dim: #737373;
   --color-dimmer: #525252;
-  --font-sans: var(--font-barlow);
-  --font-mono: var(--font-geist-mono);
+
+  /* Fonts */
+  --font-sans: var(--font-grotesk);
+  --font-serif: var(--font-serif);
+  --font-mono: var(--font-jetbrains);
+  --font-grotesk: var(--font-grotesk);
+  --font-display: var(--font-anton);
+}
+
+:root {
+  /* Aliased tokens used by paper components (mirrors the mockup) */
+  --red: #dc2626;
+  --red-2: #b91c1c;
 }
 
 body {
-  background: var(--color-background);
-  color: var(--color-foreground);
-  font-family: var(--font-barlow), system-ui, sans-serif;
-  background-image:
-    radial-gradient(
-      circle at 50% -10%,
-      rgba(220, 38, 38, 0.15) 0%,
-      transparent 55%
-    ),
-    radial-gradient(
-      circle at 50% 110%,
-      rgba(245, 158, 11, 0.08) 0%,
-      transparent 50%
-    );
-  background-attachment: fixed;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: 17px;
+  line-height: 1.55;
+  text-rendering: optimizeLegibility;
 }
 
-/* Diagonal scan-lines overlay (broadcast feel) */
-body::before {
+/* Cinematic-only chrome — applied via wrapper class on /variants/cinematic */
+.cinematic-chrome {
+  background-image:
+    radial-gradient(circle at 50% -10%, rgba(220, 38, 38, 0.15) 0%, transparent 55%),
+    radial-gradient(circle at 50% 110%, rgba(245, 158, 11, 0.08) 0%, transparent 50%);
+}
+.cinematic-chrome::before {
   content: "";
   position: fixed;
   inset: 0;
@@ -51,6 +75,57 @@ body::before {
   );
   pointer-events: none;
   z-index: 0;
+}
+
+/* ────────────────────────────────────────────────── */
+/* Paper / research utilities                          */
+/* ────────────────────────────────────────────────── */
+
+/* Numerical / tabular figures — mono and tnum on for stable widths */
+.tnum {
+  font-feature-settings: "tnum" 1;
+}
+
+/* Subtle pulse for the live-feed dot in the ticker */
+@keyframes paper-pulse {
+  50% { opacity: 0.3; }
+}
+.paper-pulse {
+  animation: paper-pulse 1.6s infinite;
+}
+
+/* Prose styling inside research sections — handles <em>, <strong>, <p> spacing */
+.research-prose p {
+  margin: 0 0 18px;
+  color: var(--color-ink-mute);
+}
+.research-prose p:last-child { margin-bottom: 0; }
+.research-prose p:first-child { color: var(--color-ink); }
+.research-prose strong {
+  color: var(--color-ink);
+  font-weight: 600;
+}
+.research-prose em {
+  font-style: italic;
+  color: #dc2626;
+  border-bottom: 1px solid rgba(220, 38, 38, 0.3);
+  padding-bottom: 1px;
+}
+.research-prose code,
+.research-prose .mono {
+  font-family: var(--font-jetbrains), ui-monospace, monospace;
+  font-feature-settings: "tnum" 1;
+  font-size: 0.92em;
+  color: var(--color-ink);
+}
+.research-prose a {
+  color: var(--color-ink);
+  border-bottom: 1px solid var(--color-rule);
+  text-decoration: none;
+}
+.research-prose a:hover {
+  color: #dc2626;
+  border-bottom-color: #dc2626;
 }
 
 /* Ticker scroll */

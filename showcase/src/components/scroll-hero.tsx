@@ -213,8 +213,8 @@ export function ScrollHero() {
   return (
     <section
       ref={containerRef}
-      className="relative h-[540vh] bg-black"
-      aria-label="Strike detection scroll sequence"
+      className="relative h-[220vh] bg-paper"
+      aria-label="Strike detection — scroll-scrubbed inference figure"
     >
       <div className="sticky top-0 h-screen overflow-hidden">
         {/* Full-bleed canvas */}
@@ -225,50 +225,38 @@ export function ScrollHero() {
           style={{ filter: loaded ? "none" : "blur(20px)" }}
         />
 
-        {/* Vignette */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-transparent via-40% to-black/90 pointer-events-none" />
+        {/* Vignette — subtle, just for HUD legibility */}
+        <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-paper/55 via-transparent via-40% to-paper/80" />
 
-        {/* Strike flash */}
+        {/* Strike flash — quieter than the broadcast version */}
         <div
           className="absolute inset-0 pointer-events-none transition-opacity duration-200"
           style={{
             background: isStrike
-              ? "radial-gradient(circle at 50% 50%, rgba(220,38,38,0.25) 0%, transparent 60%)"
+              ? "radial-gradient(circle at 50% 50%, rgba(220,38,38,0.18) 0%, transparent 65%)"
               : "transparent",
             opacity: isStrike ? 1 : 0,
           }}
         />
 
-        {/* ───── TITLE ───── */}
+        {/* ───── PRE-ROLL LABEL ───── */}
         <div
           ref={titleRef}
-          className="absolute inset-0 flex flex-col items-center justify-center text-center px-5 pointer-events-none"
+          className="absolute inset-x-0 top-1/2 -translate-y-1/2 px-8 text-center pointer-events-none"
         >
-          <div className="text-[10px] sm:text-[11px] font-mono tracking-[6px] uppercase text-white/60 mb-6">
-            Strike Detection · Frame-by-Frame · By Thomas Ou
-          </div>
-          <h1 className="text-[clamp(80px,18vw,280px)] font-black leading-[0.82] tracking-[-0.02em] text-white font-[family-name:var(--font-anton)]">
-            STR
-            <span
-              className="text-[#dc2626]"
-              style={{
-                textShadow:
-                  "0 0 60px rgba(220,38,38,0.9), 0 0 120px rgba(220,38,38,0.4)",
-              }}
-            >
-              1
-            </span>
-            KE
-          </h1>
-          <div className="mt-4 text-[11px] sm:text-[13px] font-mono tracking-[4px] uppercase text-white/60 max-w-[520px]">
-            scroll to witness inference
-          </div>
-          <div className="mt-8 flex items-center gap-2 text-white/30">
-            <span className="w-6 h-px bg-white/30" />
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
-              <path d="M6 9L2 5h8L6 9z" />
-            </svg>
-            <span className="w-6 h-px bg-white/30" />
+          <div className="mx-auto max-w-[680px]">
+            <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-ink-mute">
+              Pre-roll · scroll-scrubbed inference, 5 fps virtual playback
+            </div>
+            <p className="mt-5 font-serif text-[clamp(20px,2.6vw,32px)] italic leading-[1.3] text-ink">
+              UFC 308 · Topuria vs. Holloway · Round 2 — the model reading
+              every five frames as it goes.
+            </p>
+            <div className="mt-7 inline-flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.2em] text-ink-faint">
+              <span className="h-px w-6 bg-ink-faint/60" />
+              scroll to advance
+              <span className="h-px w-6 bg-ink-faint/60" />
+            </div>
           </div>
         </div>
 
@@ -279,117 +267,103 @@ export function ScrollHero() {
         >
           {/* Top-left: model identity */}
           <div className="absolute top-6 left-6 sm:top-8 sm:left-8">
-            <div className="text-[9px] font-mono tracking-[3px] uppercase text-white/60 mb-1">
-              Model
+            <div className="font-mono text-[9px] uppercase tracking-[0.18em] text-ink-faint">
+              model
             </div>
-            <div className="text-[11px] font-mono tracking-[2px] text-white/80">
-              TSN · KINETICS-400
+            <div className="mt-1 font-mono text-[11px] tracking-[0.12em] text-ink">
+              tsn · resnet-50 · k400 → mma
             </div>
           </div>
 
-          {/* Top-right: clip identity */}
+          {/* Top-right: sequence */}
           <div className="absolute top-6 right-6 sm:top-8 sm:right-8 text-right">
-            <div className="text-[9px] font-mono tracking-[3px] uppercase text-white/60 mb-1">
-              Sequence
+            <div className="font-mono text-[9px] uppercase tracking-[0.18em] text-ink-faint">
+              sequence
             </div>
-            <div className="text-[11px] font-mono tracking-[2px] text-white/80 uppercase">
-              {clip.name} · {clip.totalFrames} Frames
+            <div className="mt-1 font-mono text-[11px] tracking-[0.12em] text-ink">
+              {clip.name.toLowerCase()} · {clip.totalFrames}f @ {clip.fps}fps
             </div>
           </div>
 
-          {/* Prediction badge */}
+          {/* Prediction tag — quiet, no glow, no Oswald */}
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[200%] sm:-translate-y-[240%]">
             <div
-              className="px-5 py-2 text-[11px] sm:text-[13px] font-black tracking-[5px] uppercase font-[family-name:var(--font-oswald)] transition-all duration-300"
-              style={{
-                background: isStrike ? "#dc2626" : "rgba(0,0,0,0.6)",
-                color: isStrike ? "#ffffff" : "rgba(255,255,255,0.8)",
-                border: isStrike
-                  ? "1px solid #dc2626"
-                  : "1px solid rgba(255,255,255,0.15)",
-                backdropFilter: "blur(12px)",
-                boxShadow: isStrike
-                  ? "0 0 40px rgba(220,38,38,0.6)"
-                  : "none",
-              }}
+              className={[
+                "border px-3 py-1 font-mono text-[10px] uppercase tracking-[0.22em] backdrop-blur-md transition-colors",
+                isStrike
+                  ? "border-red-600 bg-red-600 text-white"
+                  : "border-rule bg-paper/55 text-ink-mute",
+              ].join(" ")}
             >
-              {isStrike ? "● STRIKE DETECTED" : "○ NEUTRAL"}
+              {isStrike ? "● strike" : "○ neutral"}
             </div>
           </div>
 
           {/* Bottom bar */}
           <div className="absolute bottom-0 inset-x-0 px-6 sm:px-8 pb-6 sm:pb-8">
             {/* Clip indicators */}
-            <div className="flex items-center gap-2 mb-3">
+            <div className="flex items-center gap-3 mb-3">
               {heroClips.map((c, i) => (
                 <div
                   key={c.id}
                   className="flex items-center gap-1.5 transition-opacity duration-300"
-                  style={{ opacity: i === clipIndex ? 1 : 0.3 }}
+                  style={{ opacity: i === clipIndex ? 1 : 0.35 }}
                 >
                   <span
-                    className="w-1.5 h-1.5 rounded-full transition-colors duration-300"
-                    style={{ background: i === clipIndex ? "#dc2626" : "rgba(255,255,255,0.3)" }}
+                    className="w-1 h-1 rounded-full transition-colors duration-300"
+                    style={{
+                      background:
+                        i === clipIndex ? "#dc2626" : "rgba(232,230,225,0.35)",
+                    }}
                   />
-                  <span className="text-[8px] font-mono tracking-[2px] uppercase text-white/70">
-                    {c.name}
+                  <span className="font-mono text-[9px] uppercase tracking-[0.18em] text-ink-mute">
+                    {c.name.toLowerCase()}
                   </span>
                 </div>
               ))}
             </div>
 
-            {/* Confidence meter */}
-            <div className="mb-4">
-              <div className="flex items-center justify-between text-[9px] font-mono tracking-[3px] uppercase mb-2">
-                <span className="text-white/60">Confidence</span>
+            {/* Confidence meter — single weight, no orange gradient */}
+            <div className="mb-3">
+              <div className="mb-1.5 flex items-baseline justify-between font-mono text-[9px] uppercase tracking-[0.18em] text-ink-faint">
+                <span>P(strike)</span>
                 <span
-                  className="tabular-nums text-[18px] sm:text-[22px] font-bold tracking-tight"
+                  className="tnum text-[16px] tracking-tight"
                   style={{
-                    color: isStrike ? "#f97316" : "rgba(255,255,255,0.5)",
+                    color: isStrike ? "#dc2626" : "var(--color-ink)",
                   }}
                 >
                   {confidence.toFixed(3)}
                 </span>
               </div>
-              <div className="relative h-[2px] bg-white/10">
+              <div className="relative h-px bg-ink/15">
                 <div
-                  className="absolute inset-y-0 left-0 transition-[width] duration-100"
-                  style={{
-                    width: `${confidence * 100}%`,
-                    background:
-                      confidence >= 0.5
-                        ? "linear-gradient(90deg, #dc2626, #f97316)"
-                        : "rgba(255,255,255,0.4)",
-                  }}
+                  className="absolute inset-y-0 left-0 bg-red-600 transition-[width] duration-100"
+                  style={{ width: `${confidence * 100}%` }}
                 />
-                <div className="absolute top-[-4px] bottom-[-4px] left-1/2 w-px bg-white/30" />
-                <div className="absolute -top-5 left-1/2 -translate-x-1/2 text-[8px] font-mono text-white/50 tracking-[2px]">
-                  0.5
-                </div>
+                <div className="absolute -top-0.5 -bottom-0.5 left-1/2 w-px bg-ink/30" />
               </div>
             </div>
 
-            {/* Frame + window + scroll progress */}
-            <div className="flex items-center justify-between text-[9px] font-mono tracking-[3px] uppercase text-white/60">
+            {/* Frame · window · progress */}
+            <div className="flex items-center justify-between font-mono text-[9px] uppercase tracking-[0.18em] text-ink-faint">
               <div className="flex items-center gap-6">
                 <span>
-                  Frame{" "}
-                  <span className="text-white/80 tabular-nums">
+                  frame{" "}
+                  <span className="tnum text-ink">
                     {String(localFrame).padStart(3, "0")}
                   </span>
-                  <span className="text-white/50"> / {clip.totalFrames - 1}</span>
+                  <span className="text-ink-faint"> / {clip.totalFrames - 1}</span>
                 </span>
                 <span className="hidden sm:inline">
-                  Window{" "}
-                  <span className="text-white/80 tabular-nums">
+                  window{" "}
+                  <span className="tnum text-ink">
                     {String(currentWindow).padStart(2, "0")}
                   </span>
-                  <span className="text-white/50"> / {predictions.length - 1}</span>
+                  <span className="text-ink-faint"> / {predictions.length - 1}</span>
                 </span>
               </div>
-              <span className="tabular-nums">
-                {(progress * 100).toFixed(0)}%
-              </span>
+              <span className="tnum">{(progress * 100).toFixed(0)}%</span>
             </div>
           </div>
         </div>
@@ -397,17 +371,10 @@ export function ScrollHero() {
         {/* ───── OUTRO ───── */}
         <div
           ref={outroRef}
-          className="absolute inset-x-0 bottom-[20%] text-center px-5 pointer-events-none opacity-0"
+          className="absolute inset-x-0 bottom-[16%] text-center px-8 pointer-events-none opacity-0"
         >
-          <div className="text-[10px] font-mono tracking-[5px] uppercase text-[#f97316] mb-3">
-            {heroClips.length} Clips · {TOTAL_VIRTUAL_FRAMES} Frames
-          </div>
-          <div className="text-[clamp(32px,5vw,64px)] font-black leading-tight tracking-tight text-white font-[family-name:var(--font-anton)]">
-            One Weekend.<br />
-            38 Hand-Labeled Windows.
-          </div>
-          <div className="mt-4 text-[11px] font-mono tracking-[3px] uppercase text-white/60">
-            Continue ↓
+          <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-ink-faint">
+            ↓ continue to the report
           </div>
         </div>
       </div>

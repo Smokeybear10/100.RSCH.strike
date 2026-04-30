@@ -1,6 +1,14 @@
 import type { Metadata } from "next";
 import Script from "next/script";
-import { Anton, Oswald, Barlow_Condensed, Geist_Mono } from "next/font/google";
+import {
+  Anton,
+  Oswald,
+  Barlow_Condensed,
+  Geist_Mono,
+  Source_Serif_4,
+  JetBrains_Mono,
+  Space_Grotesk,
+} from "next/font/google";
 import { SmoothScroll } from "@/components/smooth-scroll";
 import "./globals.css";
 
@@ -27,21 +35,40 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const sourceSerif = Source_Serif_4({
+  variable: "--font-serif",
+  weight: ["300", "400", "500", "600", "700"],
+  style: ["normal", "italic"],
+  subsets: ["latin"],
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-jetbrains",
+  weight: ["300", "400", "500", "600"],
+  subsets: ["latin"],
+});
+
+const spaceGrotesk = Space_Grotesk({
+  variable: "--font-grotesk",
+  weight: ["400", "500", "600"],
+  subsets: ["latin"],
+});
+
 export const metadata: Metadata = {
-  title: "STR1KE | Strike Detection · Main Event",
+  title: "STR1KE — Technical report",
   description:
-    "Fight Card broadcast. MMA strike detection using SAM2 + TSN, trained on 38 hand-labeled windows. One weekend of film study.",
+    "Strike detection in MMA broadcast video with a 5-frame temporal classifier on top of SAM2 silhouettes. A three-stage pipeline trained on 38 hand-labeled windows.",
   openGraph: {
-    title: "STR1KE | Strike Detection",
+    title: "STR1KE — Technical report",
     description:
-      "MMA strike detection using SAM2 + TSN, trained on 38 hand-labeled windows. One weekend of film study.",
-    type: "website",
+      "Strike detection in MMA broadcast video with a 5-frame temporal classifier on top of SAM2 silhouettes. Trained on 38 hand-labeled windows.",
+    type: "article",
   },
   twitter: {
     card: "summary_large_image",
-    title: "STR1KE | Strike Detection",
+    title: "STR1KE — Technical report",
     description:
-      "MMA strike detection using SAM2 + TSN, trained on 38 hand-labeled windows.",
+      "Strike detection in MMA broadcast video. SAM2 + TSN, 38 hand-labeled windows, Kinetics-400 transfer.",
   },
 };
 
@@ -53,7 +80,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${anton.variable} ${oswald.variable} ${barlow.variable} ${geistMono.variable} antialiased`}
+      className={`${anton.variable} ${oswald.variable} ${barlow.variable} ${geistMono.variable} ${sourceSerif.variable} ${jetbrainsMono.variable} ${spaceGrotesk.variable} antialiased`}
     >
       <head>
         <Script strategy="beforeInteractive" id="scroll-restore">
@@ -62,8 +89,8 @@ export default function RootLayout({
       </head>
       <body>
         <a
-          href="#weigh-in"
-          className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:bg-[#dc2626] focus:text-white focus:px-4 focus:py-2 focus:text-sm focus:font-bold"
+          href="#abstract"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:bg-[var(--red)] focus:text-white focus:px-4 focus:py-2 focus:text-sm focus:font-bold"
         >
           Skip to main content
         </a>
