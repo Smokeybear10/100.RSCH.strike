@@ -22,3 +22,8 @@ node_modules
 # OS
 .DS_Store
 .gstack/
+
+# Private datasets and generated research artifacts
+model/data/
+data-local/
+runs/

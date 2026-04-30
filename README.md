@@ -1,127 +1,136 @@
-# STR1KE
+# Strike | MMA Strike Attempt Detection
 
-**Live demo: [str1ke.vercel.app](https://str1ke.vercel.app)**
+**Live demo: [strike.thomasou.com](https://strike.thomasou.com)**
 
-Strike detection in MMA footage using computer vision and temporal action recognition. A three-stage pipeline segments fighters from broadcast noise, classifies 5-frame windows as strike or neutral, and outputs per-window confidence scores.
+A research pipeline for labeling and detecting strike attempts in MMA footage, including blocked and missed strikes.
 
-![Hero](assets/demos/hero-title.gif)
+![Strike footage](assets/demos/hero-title.gif)
 
-## What It Does
+The current dataset is a pilot, not a generalization benchmark. It contains 38 five-frame clips and 190 frames. Both historical test clips also occur in validation; fight IDs and timestamps were not recorded. There is no independent test result yet. The showcase distinguishes recorded notebook metrics, saved checkpoint predictions, and illustrative figures.
 
-Drop in a clip of an MMA fight. The system isolates the fighters from the broadcast (cage, crowd, overlays), then runs inference on every 5-frame window — about 150ms of real time. Each window gets a confidence score between 0 and 1. Above 0.5 is a strike. Below is neutral.
+## Quick Start
 
-A strike lands in five frames. The model reads all five at once and makes a call.
+Python 3.11. Run from the repository root:
 
-## The Pipeline
-
-### Round 1 — Segment
-
-SAM2 (Meta's Segment Anything Model 2) strips the broadcast. Prompted once per fighter in the first frame, it propagates masks forward through the entire clip. The output: fighter silhouettes on black. No cage, no crowd, no graphics. The classifier sees motion, not television.
-
-SAM2's streaming memory architecture handles the fast occlusions and overlapping bodies that make MMA footage difficult for traditional segmentation.
-
-### Round 2 — Annotate
-
-38 five-frame windows labeled by hand in Label Studio with a SAM2 backend for mask generation. 19 strikes, 19 neutral. One weekend at a kitchen table.
-
-Each window is a folder of 5 consecutive JPEG frames in MMAction2's RawframeDataset format. Annotation files map paths to frame counts and class labels:
-
-```
-strike/0 5 1
-neutral/0 5 0
+```bash
+uv venv --python 3.11
+uv pip install --python .venv/bin/python -r model/requirements.txt
+source .venv/bin/activate
 ```
 
-Split: 30 train, 6 validation, 2 held-out test.
+Keep footage outside Git. Existing private data uses `annotations/{train,val,test}.txt` and `frames/{strike,neutral}/<id>/img_00001.jpg` through `img_00005.jpg`.
 
-The dataset is small because Label Studio Premium's ML-assisted labeling (which auto-propagates after a few manual examples) wasn't available. Every mask required manual verification.
+```bash
+python -m model.data import-legacy --data-root /path/to/str1ke/data --output data-local/legacy.json
+python -m model.data audit --manifest data-local/legacy.json --data-root /path/to/str1ke/data --development --output runs/legacy-audit.json
+```
 
-### Round 3 — Classify
+Import assigns every legacy clip to **development**, retains its old split memberships, and leaves unknown provenance empty. It does not relabel old examples as reviewed strike attempts or manufacture a fresh test set.
 
-A Temporal Segment Network (TSN) with a ResNet-50 backbone, pretrained on Kinetics-400 (400 human action classes, ~300K video clips), fine-tuned for binary strike/neutral classification.
+Use new output paths for imports, audits, runs, and comparisons. Existing files are refused so an output-path mistake cannot replace source frames or prior results.
 
-TSN works in three steps:
+For a pipeline smoke run on that data:
 
-1. **Sample** — takes 5 consecutive frames as one temporal clip
-2. **Extract** — each frame passes through the shared ResNet-50 backbone, producing a 2048-dim feature vector
-3. **Aggregate** — frame features are averaged into a single representation, then a classification head outputs strike/neutral probabilities
+```bash
+python -m model.train --manifest data-local/legacy.json --data-root /path/to/str1ke/data --output runs/legacy-smoke --development --epochs 2
+```
 
-Training ran for 20 epochs on Google Colab's free tier. Under one minute total.
+This reports training-set diagnostics only. The first pretrained run downloads the public ImageNet ResNet-50 weights. No clips are uploaded.
 
-![Film Room — Knockdown](assets/demos/film-room-knockdown.gif)
+## Data and Evaluation
 
-![Film Room — Exchange](assets/demos/film-room-exchange.gif)
+Use the [manifest schema and labeling rules](PROJECT_OVERVIEW.md) to curate new footage. Assign entire fights to train, validation, or test **before extracting windows**. Keep an untouched test set from other fights; all previously inspected clips remain development data.
 
-![Film Room — Pressure](assets/demos/film-room-pressure.gif)
+```bash
+python -m model.data audit --manifest data-local/reviewed.json --data-root /path/to/frames --output runs/data-audit.json
+python -m model.train --manifest data-local/reviewed.json --data-root /path/to/frames --output runs/raw --variant raw
+python -m model.train --manifest data-local/reviewed.json --data-root /path/to/frames --output runs/masked --variant masked
+python -m model.compare --raw runs/raw --masked runs/masked --split validation --output runs/validation-comparison.json
+```
 
-## Why TSN
+The masked run requires a corresponding masked frame for every raw frame. Both runs use the same manifest, seed, training settings, preprocessing, and code. Each selects its checkpoint using validation loss. Training never evaluates test clips.
 
-A 3D CNN was attempted first. It took 4-channel input (RGB + SAM2 mask) to explicitly feed spatial mask data to the network. It never converged — 37.5% validation accuracy across all 20 epochs. With 38 data points, training from scratch couldn't work.
+After freezing the experiment design:
 
-TSN pretrained on Kinetics-400 already understands human body motion, poses, and temporal dynamics from 300K labeled videos. Fine-tuning only adapts the final layer. The backbone does the heavy lifting.
+```bash
+python -m model.evaluate --run runs/raw --manifest data-local/reviewed.json --data-root /path/to/frames
+python -m model.evaluate --run runs/masked --manifest data-local/reviewed.json --data-root /path/to/frames
+python -m model.compare --raw runs/raw --masked runs/masked --split test --output runs/test-comparison.json
+```
 
-The lesson: with extremely small datasets, transfer learning from a large pretrained model dramatically outperforms training from scratch, even if the from-scratch architecture is theoretically more expressive.
+If evaluation used a custom `--output`, pass that directory to comparison with `--raw-evaluation` or `--masked-evaluation`. Both evaluation and comparison check the checkpoint against the original training record.
 
-## Key Decisions
+Each run saves configuration, dataset and source hashes, environment versions, epoch history, a checkpoint, per-clip probabilities, and overall/per-fight metrics. Reports include precision, recall, F1, balanced accuracy, average precision, log loss, Brier score, and a confusion matrix. Undefined metrics are `null`, not a misleading zero. A comparison reports changed predictions and descriptive differences; it does not claim statistical significance from correlated clips.
 
-**5-frame windows** — At 30fps, 5 frames is ~167ms. A typical MMA strike takes 100-200ms from initiation to landing. The window captures the full action without diluting the signal with neutral movement before or after.
+## Annotation Workspace
 
-**Binary classification** — 38 labeled windows split across multiple strike types (jab, cross, kick, elbow) would mean ~5 samples per class. Binary strike/neutral is the simplest formulation that still produces a useful signal.
+Open http://localhost:2100/workspace with the showcase running. Choose a local video and enter a stable fight ID. Mark short windows as attempt, no attempt, or uncertain; misses and blocks are attempts. Record outcomes and notes separately. Use `I` / `O` for in/out points, `1` / `2` / `3` to label, `N` for a new window, and arrow keys to seek by 0.1 seconds.
 
-**SAM2 as preprocessing** — Most approaches feed raw video to the classifier and hope it learns to ignore the background. By explicitly removing the background first, the problem simplifies from action recognition in noisy broadcast footage to action recognition on clean silhouettes. This also makes the tiny dataset go further — the model doesn't waste capacity learning what's background vs. fighter.
+Annotations save in IndexedDB after each change. Videos are neither uploaded nor stored in the browser database; reconnect the original file after reloading. A streamed SHA-256 check prevents attaching different footage with the same filename. Export JSON backups to move work between browsers or preserve it outside browser storage. Concurrent edits from another tab are refused instead of overwriting newer work.
 
-**Raw frames over video files** — MMAction2's RawframeDataset format allows frame-level preprocessing (applying SAM2 masks per frame) and avoids codec decoding overhead during training.
+Export your annotation backup, then prepare frames and run an existing raw checkpoint:
 
-## Results
+```bash
+python -m model.prepare --annotations annotations.json --video /path/to/footage.mp4 --output data-local/reviewed
+python -m model.predict --prepared data-local/reviewed --run runs/legacy-smoke --output runs/workspace-review
+```
 
-The model correctly identifies obvious strikes (clear punches, knockdowns) with high confidence. Transfer learning from Kinetics-400 provides a strong prior on human body motion, and SAM2 segmentation significantly reduces background noise.
+Replace `runs/legacy-smoke` with the completed model run you want to inspect. Import `runs/workspace-review/predictions.json` into the workspace. Its review queue can filter disagreements with your labels. Predictions never overwrite annotations, and editing window boundaries invalidates their old scores.
 
-Limitations:
+Preparation uses PyAV's bundled FFmpeg libraries; no system FFmpeg install is needed. It samples five distinct, ordered source frames inside each interval, records their presentation timestamps and hashes, and checks the generated manifest. Intervals containing fewer than five frames are refused. Use zero-start video timelines; unsupported timestamps or display transforms require re-encoding and labeling the corrected file. Variable frame rates are supported through recorded presentation timestamps, not an assumed frame rate.
 
-- 38 windows is small. The model likely overfits to the source fight (Topuria vs. Holloway) and would struggle with different fighters, weight classes, or camera angles.
-- Binary classification can't distinguish strike types.
-- Each 5-frame window is classified independently — no temporal context between windows.
-- Inference writes temporary video files per window (MMAction2 API constraint), which limits real-time throughput.
+`review.json` retains every window. `manifest.json` includes only attempt/no-attempt labels, all assigned to development; uncertain and unlabeled windows are excluded. If no windows have definitive labels, no training manifest is written. Prediction can still score those windows for review. These are window labels and diagnostic scores, not unique strike counts or independent benchmark results.
 
-## What Would Improve It
+## Baseline
 
-More labeled data is the primary bottleneck. Even 200-500 windows would dramatically improve generalization. Beyond that: multi-fight datasets across weight classes, multi-class labels (jab, kick, takedown), and sliding windows with overlap to catch strikes that span window boundaries.
+The new baseline freezes an **ImageNet-1K ResNet-50**, averages features across five frames, and trains a two-class linear head. Frozen batch normalization stays in evaluation mode. Frame preprocessing is identical during training and evaluation.
+
+This is an **appearance baseline**: averaging is insensitive to frame order. It can recognize poses and visual context but does not explicitly model strike motion. SAM2 masking is an experiment to compare against raw footage, not an established improvement. Five frames are a modeling choice, not a guarantee that the whole attempt fits inside a window.
+
+The original MMAction2 and 3D-CNN notebooks remain unchanged as historical artifacts. The saved TSN run loads ImageNet weights, records no Kinetics checkpoint initialization, and ends at 50% validation accuracy on six clips. Its earlier 100% validation epochs are not evidence of unseen-fight performance.
+
+## Showcase
+
+```bash
+cd showcase
+npm ci
+npm run dev
+```
+
+Open http://localhost:2100. The demo at `/demo` plays recorded checkpoint predictions on the displayed frames; their accuracy has not been measured. The research report labels its illustrative figures separately. The workspace at `/workspace` reviews local footage and imports saved model scores; new inference runs locally in Python.
+
+Regenerate the historical chart from saved notebook output:
+
+```bash
+python model/export_notebook_history.py
+```
 
 ## Tech Stack
 
 | Layer | Tools |
-|-------|-------|
-| Segmentation | SAM2 (Meta) |
-| Annotation | Label Studio + SAM2 backend |
-| Framework | MMAction2 (OpenMMLab) |
-| Model | TSN (ResNet-50, Kinetics-400 pretrain) |
-| Training | PyTorch, Google Colab (free tier) |
-| Showcase | Next.js, Tailwind CSS, GSAP |
+|---|---|
+| Data audit | Python, Pillow, SHA-256 manifests |
+| Baseline | PyTorch, torchvision, frozen ResNet-50 |
+| Masking experiments | Paired precomputed frames; existing SAM2 tooling |
+| Historical experiments | MMAction2 TSN, 3D-CNN notebooks |
+| Showcase | Next.js, TypeScript, Tailwind CSS |
 
 ## Project Structure
 
+```text
+model/
+  data.py                    # Import, provenance checks, leakage audit
+  baseline.py                # Encoder, preprocessing, metrics
+  train.py                   # Seeded training and checkpoint selection
+  evaluate.py                # Separate test evaluation
+  compare.py                 # Paired raw/masked comparison
+  annotations.py             # Workspace export validation
+  prepare.py                 # Timestamped video extraction
+  predict.py                 # Saved-checkpoint review scores
+  export_notebook_history.py # Recorded historical chart, with source hash
+  notebooks/                 # Original experiments
+showcase/                    # Research report, recorded demo, and annotation workspace
+PROJECT_OVERVIEW.md          # Labeling and manifest reference
 ```
-STR1KE/
-├── model/
-│   ├── notebooks/
-│   │   ├── TSN_Pipeline.ipynb       # TSN fine-tuning + inference
-│   │   └── 3DCNN_Pipeline.ipynb     # 3D CNN attempt (abandoned)
-│   └── data/
-│       ├── annotations/             # train/val/test splits
-│       └── frames/
-│           ├── strike/              # 19 windows, 5 frames each
-│           └── neutral/             # 19 windows, 5 frames each
-├── showcase/                        # interactive demo site
-│   └── src/
-│       ├── app/                     # Next.js pages
-│       ├── components/              # scroll hero, film room, upload
-│       └── lib/                     # clip data, player utils
-├── assets/
-│   ├── demos/                       # showcase GIFs
-│   └── Mma_pictogram.svg
-├── PROJECT_OVERVIEW.md              # deep technical writeup
-└── README.md
-```
-
----
 
 Built by Thomas Ou
