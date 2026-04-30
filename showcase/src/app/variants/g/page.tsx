@@ -266,7 +266,7 @@ export default function VariantG() {
                       {p.code}
                     </span>
                     <span className="text-[9px] tracking-[2px] uppercase text-[#00ff7f]/80">
-                      // {p.tool}
+                      {"// "}{p.tool}
                     </span>
                   </div>
                   <p className="text-[12px] text-[#00d9ff]/70 leading-relaxed">
@@ -281,7 +281,7 @@ export default function VariantG() {
                     ◈ COMPLETE
                   </div>
                   <div className="text-[8px] tracking-[2px] text-[#00d9ff]/40 mt-1 font-mono">
-                    0x{Math.floor(Math.random() * 1000000).toString(16).toUpperCase().padStart(6, "0")}
+                    0x{(Number(p.phase) * 104729).toString(16).toUpperCase().padStart(6, "0")}
                   </div>
                 </div>
               </div>

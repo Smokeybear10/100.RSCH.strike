@@ -1,6 +1,7 @@
 import type { Clip, Prediction } from "./types";
 
-function generatePredictions(
+// Hand-authored interface fixtures. Never use these values as model results.
+function generateIllustrativePredictions(
   totalFrames: number,
   windowSize: number,
   pattern: number[]
@@ -62,7 +63,7 @@ export const heroClips: Clip[] = [
     totalFrames: 200,
     fps: 12,
     windowSize: 5,
-    predictions: generatePredictions(200, 5, knockdownPattern),
+    predictions: generateIllustrativePredictions(200, 5, knockdownPattern),
     frameDir: "/clips/knockdown-masked",
   },
   {
@@ -71,7 +72,7 @@ export const heroClips: Clip[] = [
     totalFrames: 200,
     fps: 12,
     windowSize: 5,
-    predictions: generatePredictions(200, 5, exchangePattern),
+    predictions: generateIllustrativePredictions(200, 5, exchangePattern),
     frameDir: "/clips/exchange-masked",
   },
 ];
@@ -83,7 +84,7 @@ export const demoClips: Clip[] = [
     totalFrames: 200,
     fps: 12,
     windowSize: 5,
-    predictions: generatePredictions(200, 5, knockdownPattern),
+    predictions: generateIllustrativePredictions(200, 5, knockdownPattern),
     frameDir: "/clips/knockdown",
   },
   {
@@ -92,7 +93,7 @@ export const demoClips: Clip[] = [
     totalFrames: 200,
     fps: 12,
     windowSize: 5,
-    predictions: generatePredictions(200, 5, exchangePattern),
+    predictions: generateIllustrativePredictions(200, 5, exchangePattern),
     frameDir: "/clips/exchange",
   },
   {
@@ -101,7 +102,7 @@ export const demoClips: Clip[] = [
     totalFrames: 200,
     fps: 12,
     windowSize: 5,
-    predictions: generatePredictions(200, 5, pressurePattern),
+    predictions: generateIllustrativePredictions(200, 5, pressurePattern),
     frameDir: "/clips/pressure",
   },
 ];

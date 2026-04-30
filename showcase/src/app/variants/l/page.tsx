@@ -65,7 +65,7 @@ export default function VariantL() {
                   {tickerItems.map((item, i) => (
                     <span key={i} className="flex items-center gap-10 shrink-0">
                       <span>{item}</span>
-                      <span className="text-white/30">//</span>
+                      <span className="text-white/30">{"//"}</span>
                     </span>
                   ))}
                 </span>

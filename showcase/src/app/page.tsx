@@ -1,611 +1,236 @@
 import { ScrollHero } from "@/components/scroll-hero";
 import {
-  Ticker,
-  Masthead,
-  Abstract,
-  Section,
-  Figure,
-  PipelineSteps,
-  KvGrid,
-  FailGrid,
-  SpecTable,
-  CodeBlock,
-  Code,
-  DemoPlayer,
-  Upload,
+  Ticker, Masthead, Abstract, Section, Figure, PipelineSteps,
+  KvGrid, FailGrid, SpecTable, CodeBlock, Upload,
 } from "@/components/paper";
 import {
-  TSNDiagram,
-  SAM2Slider,
-  TrainingCurves,
-  ConfidenceTimelineFigure,
+  TSNDiagram, SAM2Slider, TrainingCurves, ConfidenceTimelineFigure,
 } from "@/components/figures";
-import { researchClips, FAILURES } from "@/lib/research-data";
+import { researchClips, FAILURES, TRAINING } from "@/lib/research-data";
+import { RecordedDemoPlayer } from "@/components/paper/recorded-demo-player";
 
 export default function Home() {
-  const knockdownClip = researchClips.find((c) => c.id === "knockdown")!;
+  const exampleClip = researchClips[0];
+  const finalEpoch = TRAINING.epochs[TRAINING.epochs.length - 1];
 
   return (
     <main id="main" className="relative bg-paper text-ink">
-      {/* CINEMATIC INTRO — preserved scroll-scrubbed fight sequence. */}
+      <Ticker active="/#abstract" />
       <ScrollHero />
-
-      {/* Sticky research ticker — engages once the intro is past. */}
-      <Ticker />
-
       <div className="mx-auto max-w-[1180px] px-8">
-        {/* ───────────────────────────────  Masthead  ─────────────────────────────── */}
         <Masthead
-          title={
-            <>
-              Strike detection in MMA broadcast video with a{" "}
-              <em>5-frame</em> temporal classifier on top of SAM2 silhouettes.
-            </>
-          }
-          deck={
-            <>
-              A three-stage pipeline — segment, annotate, classify — that calls
-              strike or neutral on every 5-frame window. Trained on 38
-              hand-labeled windows and a Kinetics-400 prior. This page presents
-              the system, the design decisions, and the failure modes that
-              survive them.
-            </>
-          }
+          title={<>Detecting <em>strike attempts</em> in MMA broadcast footage.</>}
+          deck={<>A small-data computer vision study. The current work centers on label quality,
+            fight-separated evaluation, and reproducible baselines. Notebook results,
+            recorded checkpoint predictions, and illustrative figures are identified separately below.</>}
           meta={[
             { label: "Author", value: "Thomas Ou" },
-            {
-              label: "Code",
-              value: (
-                <a
-                  href="https://github.com/Smokeybear10/STR1KE"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="border-b border-rule hover:border-red-600 hover:text-red-600"
-                >
-                  github.com/Smokeybear10/STR1KE
-                </a>
-              ),
-            },
-            { label: "Source", value: "UFC 308 · Topuria vs. Holloway" },
-            { label: "Read time", value: "≈ 7 min" },
-            {
-              label: "Status",
-              value: <span className="text-red-600">technical preview</span>,
-            },
+            { label: "Code", value: <a href="https://github.com/Smokeybear10/100.RSCH.strike"
+              target="_blank" rel="noopener noreferrer"
+              className="border-b border-rule hover:border-red-600 hover:text-red-600">100.RSCH.strike</a> },
+            { label: "Data", value: "38 legacy windows · provenance incomplete" },
+            { label: "Status", value: <span className="text-red-600">development baseline</span> },
           ]}
         />
-
-        {/* ───────────────────────────────  Abstract  ─────────────────────────────── */}
         <Abstract>
           <p>
-            We fine-tune a Temporal Segment Network (ResNet-50, Kinetics-400
-            pretrain) for binary strike / neutral classification on 5-frame
-            windows of MMA footage. SAM2 segmentation removes the broadcast
-            (cage, crowd, overlays) before classification, reducing the
-            domain-shift burden on a dataset of only 38 hand-labeled windows.
-            The pipeline reaches 0.83 validation accuracy after under one
-            minute of training on a free-tier Colab GPU. A from-scratch 3D CNN
-            baseline never converges — we report both, and discuss where the
-            small-data regime forces transfer learning to do almost all the
-            work.
+            Strike classifies five-frame windows as a strike attempt or no attempt.
+            Misses and blocked strikes count as attempts. The legacy dataset contains
+            38 labeled windows, but both clips designated as test data also appear in
+            validation. Those splits cannot support an independent test score.
+            The saved TSN run ends at {(finalEpoch.val_accuracy * 100).toFixed(0)}%
+            validation accuracy; its earlier 100% results were measured on just six
+            validation clips. Neither establishes generalization to unseen fights.
           </p>
         </Abstract>
 
-        {/* ───────────────────────────────  § 01 Problem  ─────────────────────────────── */}
-        <Section
-          id="problem"
-          number="§ 01 · Problem"
+        <Section id="problem" number="§ 01 · Define the target"
           rail={[
-            {
-              heading: "In one line",
-              body: "A strike lands in roughly 150 ms — five frames at 30 fps. The whole action lives in a window narrower than human reaction time.",
-            },
-            {
-              heading: "Why public datasets fail",
-              body: "Action-recognition corpora (Kinetics, AVA) treat punches as a coarse label across seconds of context. We need the millisecond.",
-            },
-            {
-              heading: "Constraints",
-              body: "Free-tier GPU. One labeler. One weekend. No premium annotation tools.",
-            },
-          ]}
-        >
+            { heading: "Positive", body: "A committed strike attempt, including a miss or a blocked strike." },
+            { heading: "Negative", body: "No strike attempt: movement, guard adjustments, feints, or clinching alone." },
+            { heading: "Uncertain", body: "Review occluded or ambiguous windows; do not silently assign them to neutral." },
+          ]}>
           <p>
-            Detecting a strike in broadcast MMA video is, on the surface, a
-            1-class action-recognition problem. Three things make it
-            specifically hard.
+            Contact detection and attempt detection are different tasks. A punch
+            that misses still belongs in the positive class. Landed, blocked, and
+            missed can be recorded as separate outcome attributes without changing
+            the attempt label.
           </p>
           <p>
-            <strong>Temporal scale.</strong> A jab takes 100–200 ms from
-            initiation to contact. At 30 fps that is five frames. Most
-            action-recognition models read seconds of context; here the entire
-            signal is shorter than a sneeze. Either the model reads all five
-            frames at once, or it misses the action.
+            Five frames at 30 fps span about 167 ms of playback. That is a sampling
+            choice, not a guarantee that a full action fits inside each window.
+            Attempt timestamps and source footage identifiers are needed to inspect
+            boundaries and avoid counting the same event twice.
           </p>
           <p>
-            <strong>Domain noise.</strong> Broadcast footage carries cage
-            geometry, crowd parallax, scorebugs, corporate overlays, and a
-            camera that pans on contact. A naïve classifier will happily learn
-            to predict <em>strike</em> whenever the Monster Energy logo enters
-            frame.
-          </p>
-          <p>
-            <strong>No data.</strong> There is no public, labeled dataset for
-            MMA strike detection. Every sample in this work was created from
-            scratch.
+            The old labels have not been re-reviewed against this definition.
+            They remain development examples until their provenance and labels are checked.
           </p>
         </Section>
 
-        {/* ───────────────────────────────  § 02 First attempt  ─────────────────────────────── */}
-        <Section
-          id="ablation"
-          number="§ 02 · First attempt — 3D CNN from scratch"
+        <Section id="ablation" number="§ 02 · What the existing data supports"
           rail={[
-            {
-              heading: "What we tried",
-              body: "Custom 3D CNN. 4-channel input (RGB + SAM2 mask). Conv3D → MaxPool3D → GAP → FC.",
-            },
-            {
-              heading: "Result",
-              body: "Validation accuracy stuck at 37.5% across all 20 epochs. The model never learned.",
-            },
-            {
-              heading: "Lesson",
-              body: "n = 38 cannot teach a randomly-initialized 3D conv anything about human motion.",
-            },
+            { heading: "Inventory", body: "38 unique folders, five JPEGs each. 19 legacy strike labels and 19 neutral labels." },
+            { heading: "Split issue", body: "30 train entries, six validation entries, and two test entries. Both test clips are also in validation; two other clips are unused." },
+            { heading: "Source issue", body: "Fight identifiers and timestamps are missing. A sampled frame identifies Gaethje–Holloway, contradicting the previous blanket source attribution." },
           ]}
-          extras={
-            <Figure
-              number="FIG 01"
-              title="20-epoch training comparison"
-              scale="n=38 · Colab T4"
-              caption={
-                <>
-                  <strong>Solid:</strong> TSN with K400 pretrain, head-only
-                  fine-tune (introduced in §03). <strong>Dashed:</strong> 3D
-                  CNN trained from scratch on RGB + mask. The 3D-CNN curve is
-                  reconstructed from logged values — flat at 37.5% is the
-                  literal result we observed. The takeaway is not that 3D
-                  convolutions are wrong for this task; it is that, in the
-                  small-data regime, transfer learning beats theoretically-
-                  better-suited architectures that lack a useful prior.
-                </>
-              }
-            >
-              <TrainingCurves />
+          extras={<Figure number="FIG 01" title="Recorded legacy TSN run" scale="20 epochs · six validation clips"
+            caption={<>Values are extracted directly from saved notebook output. The former reconstructed
+              curves have been removed. Training accuracy reaches 100% while validation ends at 50%.
+              The historical 3D CNN notebook is not presented as a controlled comparison.</>}>
+            <TrainingCurves />
+          </Figure>}>
+          <p>
+            The first priority is a trustworthy dataset. Reusing a validation clip
+            as a test clip measures the same examples again; it does not create a holdout.
+            Randomly redistributing adjacent windows can also leak fight-specific appearance.
+          </p>
+          <p>
+            New experiments reserve entire fights for train, validation, or test.
+            Legacy examples are kept as development data rather than relabeled as a
+            new independent benchmark. The frame folders supplied with the old
+            annotations are raw broadcast images; a paired masked evaluation has not been recorded.
+          </p>
+        </Section>
+
+        <Section id="pipeline" number="§ 03 · Reproducible baseline"
+          rail={[
+            { heading: "Unit of data", body: "A versioned clip manifest with source, fight, time interval, label, split, and exact frame paths." },
+            { heading: "Unit of evaluation", body: "Unseen fights. Report clip-level results first; event-level detection needs attempt boundaries." },
+          ]}
+          extras={<>
+            <PipelineSteps steps={[
+              { number: "Stage 01", title: "Audit", role: "Manifest + frame checksums",
+                description: "Validate files, labels, provenance, split membership, and duplicated frames before training. Missing provenance blocks research evaluation.",
+                meta: [{ label: "Target", value: "strike attempt" }, { label: "Split", value: "by fight" }] },
+              { number: "Stage 02", title: "Fit", role: "Frozen ImageNet appearance baseline",
+                description: "Extract ResNet-50 features from five frames, average them, and fit a binary linear head. This is a new baseline, separate from the historical MMAction2 notebook.",
+                meta: [{ label: "Input", value: "5 RGB frames" }, { label: "Weights", value: "ImageNet1K V1" }] },
+              { number: "Stage 03", title: "Evaluate", role: "Saved predictions + run artifacts",
+                description: "Select the checkpoint on validation, then evaluate the reserved test fights separately. Keep per-clip probabilities, confusion counts, metrics, configuration, and dataset fingerprint.",
+                meta: [{ label: "Outputs", value: "JSON + CSV + checkpoint" }, { label: "Masking", value: "paired experiment" }] },
+            ]} />
+            <Figure number="FIG 02" title="Masking as an experiment" scale="visual example"
+              caption={<>The before/after view illustrates segmentation. It is not evidence that masking improves
+                recognition. That requires raw and masked runs on the same clips and fight-separated splits.</>}>
+              <SAM2Slider />
             </Figure>
-          }
-        >
+            <Figure number="FIG 03" title="Average five frame representations" scale="appearance baseline"
+              caption={<>Averaging makes the representation invariant to frame order. It can recognize visual
+                configurations, but it does not explicitly model the direction or timing of a strike.</>}>
+              <TSNDiagram />
+            </Figure>
+          </>}>
           <p>
-            The architecturally cleaner option came first: a small 3D CNN that
-            ingests RGB and the SAM2 mask jointly as a 4-channel volume. The
-            hypothesis was that explicit mask information, fed end-to-end,
-            would let the network learn fighter-aware spatiotemporal features.
-          </p>
-          <p>
-            It never converged. With 38 training samples, no pretrain is
-            available for 4-channel 3D convolutions; the model is initialized
-            from scratch and asked to learn human-motion priors from a
-            kitchen-table dataset. Validation accuracy flatlined at the
-            majority baseline.
-          </p>
-          <p>
-            The pivot: trade architectural elegance for a strong prior.
-            ResNet-50 has already seen{" "}
-            <strong>~300 K Kinetics-400 video clips</strong> covering human
-            action. Fine-tuning only adapts the final layer. The backbone does
-            the heavy lifting; the head learns the strike/neutral boundary.
-            That move is the whole pipeline below.
+            A simple baseline makes data improvements measurable. Masking is an
+            optional paired input variant, not an assumed performance gain. Both
+            variants must use the same clip identities, labels, splits, preprocessing,
+            and training settings before their results can be compared.
           </p>
         </Section>
 
-        {/* ───────────────────────────────  § 03 Pipeline  ─────────────────────────────── */}
-        <Section
-          id="pipeline"
-          number="§ 03 · Pipeline"
+        <Section id="results" number="§ 04 · Results and evidence"
           rail={[
-            {
-              heading: "Three stages",
-              body: "Each stage emits artifacts the next consumes. SAM2 masks → frame folders → softmax.",
-            },
-            {
-              heading: "Format",
-              body: (
-                <>
-                  MMAction2 RawframeDataset. Per-clip JPEG folders. Annotation
-                  is one line per window:{" "}
-                  <span className="font-mono">path n_frames label</span>.
-                </>
-              ),
-            },
+            { heading: "Measured", body: "The historical training chart is parsed from saved notebook logs, with a source checksum." },
+            { heading: "Not yet measured", body: "Independent test performance, generalization across fights, event-level recall, and the benefit of masking." },
           ]}
-          extras={
-            <>
-              <PipelineSteps
-                steps={[
-                  {
-                    number: "Stage 01",
-                    title: "Segment",
-                    role: "SAM2 · Meta",
-                    description:
-                      "Promptable segmentation, prompted once per fighter on frame 0 of a clip. SAM2's streaming memory propagates masks forward through fast occlusion and overlapping bodies — exactly the failure modes that defeat simpler trackers.",
-                    meta: [
-                      { label: "Input", value: "RGB frames" },
-                      { label: "Output", value: "per-frame binary mask" },
-                      { label: "Prompt", value: "1 click / fighter" },
-                    ],
-                  },
-                  {
-                    number: "Stage 02",
-                    title: "Annotate",
-                    role: "Label Studio · SAM2 backend",
-                    description:
-                      "38 five-frame windows hand-verified over one weekend at a kitchen table. Balanced 19 / 19. Without ML-assisted propagation (premium-only), every mask had to be inspected manually — the bottleneck is the eye, not the GPU.",
-                    meta: [
-                      { label: "Windows", value: "38 (19 strike · 19 neutral)" },
-                      { label: "Frames each", value: "5 @ 30 fps" },
-                      { label: "Split", value: "30 / 6 / 2" },
-                    ],
-                  },
-                  {
-                    number: "Stage 03",
-                    title: "Classify",
-                    role: "TSN · ResNet-50 · K400 pretrain",
-                    description:
-                      "Temporal Segment Network. Each of the 5 frames passes through a shared ResNet-50; features are averaged into a single 2048-d vector; a fresh FC head produces the binary softmax. Backbone frozen, head fine-tuned.",
-                    meta: [
-                      {
-                        label: "Pretrain",
-                        value: "tsn_r50_1x1x3_100e_k400",
-                      },
-                      { label: "Epochs", value: "20" },
-                      { label: "Train time", value: "< 1 min · 1 GPU" },
-                    ],
-                  },
-                ]}
-              />
-
-              <Figure
-                number="FIG 02"
-                title="Drag to reveal: SAM2 mask vs. broadcast frame"
-                scale="stage 01"
-                caption={
-                  <>
-                    The classifier never sees the left side; it sees only the
-                    right. Removing the broadcast before classification
-                    sidesteps the bulk of domain-shift, which the dataset is
-                    too small to absorb directly. Background-removal as
-                    preprocessing — not as architecture — is the single most
-                    consequential design decision in the project.
-                  </>
-                }
-              >
-                <SAM2Slider />
-              </Figure>
-
-              <Figure
-                number="FIG 03"
-                title="TSN forward pass on one 5-frame window"
-                scale="stage 03"
-                caption={
-                  <>
-                    Sparse sampling: TSN was designed for untrimmed video, but
-                    its consensus rule — average per-frame features before the
-                    head — is exactly right for our 5-frame window. The model
-                    is forced to pick up patterns that hold across the whole
-                    strike, not single-frame artifacts.
-                  </>
-                }
-              >
-                <TSNDiagram />
-              </Figure>
-            </>
-          }
-        >
+          extras={<>
+            <KvGrid items={[
+              { k: "legacy windows", v: "38", sub: "190 frames · labels need review" },
+              { k: "last-epoch validation", v: `${(finalEpoch.val_accuracy * 100).toFixed(0)}%`, sub: "historical six-clip validation", emphasize: true },
+              { k: "test clips in validation", v: "2 / 2", sub: "legacy split overlap" },
+              { k: "independent test score", v: "—", sub: "not available" },
+            ]} />
+            <Figure number="FIG 04" title="Illustrative score timeline" scale="hand-authored interface data"
+              caption={<>These scores are fixtures used to demonstrate the player and score display.
+                Peaks are not measured detections, calibrated probabilities, or verified strike annotations.</>}>
+              <ConfidenceTimelineFigure clip={exampleClip} />
+            </Figure>
+          </>}>
           <p>
-            The system is staged so each step is independently inspectable.
-            Mask quality can be audited without re-running training; classifier
-            output can be re-aggregated without re-running segmentation.
+            This page does not report an independent benchmark. The training
+            chart documents what the old run recorded. The interactive player below
+            uses saved checkpoint predictions on the exact displayed frames. Those
+            clips have no verified annotations, so their scores do not establish accuracy.
           </p>
         </Section>
 
-        {/* ───────────────────────────────  § 04 Results  ─────────────────────────────── */}
-        <Section
-          id="results"
-          number="§ 04 · Results"
+        <Section id="failures" number="§ 05 · Evaluation slices to collect"
           rail={[
-            {
-              heading: "What this shows",
-              body: "Per-window confidence on the Knockdown clip. Three real strike events sit clearly above the threshold; the rest is appropriately quiet.",
-            },
-            {
-              heading: "What it can't show",
-              body: "n = 38 means error bars are essentially the entire range. Read this as a working pipeline, not a benchmark.",
-            },
+            { heading: "Labeling priority", body: "Collect hard negatives and unsuccessful attempts, not just obvious landed punches." },
+            { heading: "Report separately", body: "Break down errors by fight, camera view, occlusion, and attempt outcome when those annotations are available." },
           ]}
-          extras={
-            <>
-              <KvGrid
-                items={[
-                  {
-                    k: "val accuracy",
-                    v: "0.83",
-                    sub: "5 / 6 windows",
-                    emphasize: true,
-                  },
-                  {
-                    k: "peak confidence",
-                    v: "0.98",
-                    sub: "pressure clip · w13",
-                  },
-                  {
-                    k: "3D CNN baseline",
-                    v: "0.375",
-                    sub: "majority-class",
-                  },
-                  {
-                    k: "train time",
-                    v: "< 60 s",
-                    sub: "colab T4 · 20 epochs",
-                  },
-                ]}
-              />
-
-              <Figure
-                number="FIG 04"
-                title="Per-window P(strike) on Knockdown clip · interactive"
-                scale={`${knockdownClip.predictions.length} windows · ${knockdownClip.totalFrames} frames · ${(knockdownClip.totalFrames / knockdownClip.fps).toFixed(1)} s`}
-                caption={
-                  <>
-                    Each x-tick is one 5-frame window. Red dots mark
-                    above-threshold local maxima; the dashed line is the 0.5
-                    decision boundary. The three peaks at{" "}
-                    <span className="font-mono">w3</span>,{" "}
-                    <span className="font-mono">w20</span> and{" "}
-                    <span className="font-mono">w35</span> correspond to the
-                    left hook, the follow-up ground strike, and the referee&apos;s
-                    intervention motion respectively — the model is detecting
-                    all three and quieting in between.
-                  </>
-                }
-              >
-                <ConfidenceTimelineFigure clip={knockdownClip} />
-              </Figure>
-            </>
-          }
-        >
+          extras={<FailGrid items={FAILURES} />}>
           <p>
-            The plot below is the model&apos;s softmax output, window-by-window,
-            on the Knockdown clip. Hover anywhere to read the underlying
-            numbers.
+            These are cases to measure in future evaluation, not claimed failures
+            from a held-out run. Keeping them separate makes it possible to tell
+            whether the classifier recognizes an attempt or relies on contact and camera cues.
           </p>
         </Section>
 
-        {/* ───────────────────────────────  § 05 Failures  ─────────────────────────────── */}
-        <Section
-          id="failures"
-          number="§ 05 · What the model gets wrong"
+        <Section id="future" number="§ 06 · Next data collection"
           rail={[
-            {
-              heading: "Honest limits",
-              body: "One source fight. One labeler. No multi-fighter generalization claim is made.",
-            },
-            {
-              heading: "Recurring patterns",
-              body: "Clinch breaks, missed jabs, and strikes that straddle non-overlapping windows.",
-            },
-          ]}
-          extras={<FailGrid items={FAILURES} />}
-        >
+            { heading: "First", body: "Review the legacy labels and record source fight and time boundaries." },
+            { heading: "Then", body: "Add independent fights and freeze the test partition before model selection." },
+          ]}>
           <p>
-            Three failure modes recur across the test clips. They are not
-            bugs; they are the load-bearing limits of a 38-sample classifier
-            with no temporal context between windows.
+            More adjacent windows from one sequence are not a substitute for
+            independent fights. Sample different fighters, camera angles, outcomes,
+            and non-strike movement. Keep uncertain labels visible rather than
+            hiding them in the negative class.
+          </p>
+          <p>
+            Compare the raw and masked baseline only after both have identical
+            reviewed clips and splits. Keep the test fights untouched while choosing
+            model settings and thresholds on training and validation data.
           </p>
         </Section>
 
-        {/* ───────────────────────────────  § 06 Future  ─────────────────────────────── */}
-        <Section
-          id="future"
-          number="§ 06 · What ten times the data would change"
+        <Section id="repro" number="§ 07 · Reproduce the evidence"
           rail={[
-            {
-              heading: "Bottleneck",
-              body: "Labeled windows. Everything else is configured.",
-            },
-            {
-              heading: "Order of operations",
-              body: "1 · more annotation. 2 · multi-class. 3 · sliding windows. 4 · multi-fight.",
-            },
+            { heading: "Historical record", body: "The notebooks retain their original outputs. The showcase chart is exported from those outputs." },
+            { heading: "New experiments", body: "Each run records its seed, preprocessing, weight source, dataset fingerprint, and selected checkpoint." },
           ]}
-        >
+          extras={<>
+            <CodeBlock>{"# Regenerate the chart from saved notebook logs\npython3 model/export_notebook_history.py\n\n# Inspect the research commands\npython -m model.data --help\npython -m model.train --help\npython -m model.evaluate --help"}</CodeBlock>
+            <SpecTable rows={[
+              { setting: "new baseline", value: "ResNet-50 + average + linear head", notes: "appearance features; frame-order invariant" },
+              { setting: "initialization", value: "ImageNet1K V1", notes: "explicit torchvision weight version" },
+              { setting: "input", value: "5 × 224 × 224 RGB", notes: "resize 256, center crop, ImageNet normalization" },
+              { setting: "trainable parameters", value: "binary classification head", notes: "new baseline freezes the backbone and its batch-normalization statistics" },
+              { setting: "legacy initialization", value: "ImageNet ResNet-50", notes: "saved notebook has load_from=None; downloaded Kinetics checkpoint was not loaded" },
+              { setting: "legacy selection", value: "best saved at epoch 1", notes: "inference cell instead loads epoch 20; not a new benchmark" },
+            ]} />
+          </>}>
           <p>
-            The 0.83 number is a ceiling against the 38-window dataset, not
-            against the task. The path from here is unglamorous:{" "}
-            <strong>more annotation</strong>. Even 200–500 windows would be
-            transformative. With ML-assisted propagation the same weekend
-            yields ~10× the data.
-          </p>
-          <p>
-            Beyond volume, three structural changes are queued.{" "}
-            <strong>Multi-class labels</strong> (jab, cross, hook, kick,
-            elbow, knee, takedown) make the output useful for fight analytics,
-            not just highlight detection.{" "}
-            <strong>Overlapping sliding windows</strong> recover strikes that
-            currently fragment across the boundary at{" "}
-            <span className="font-mono">w14/w15</span>.{" "}
-            <strong>Multi-fight, multi-fighter</strong> training breaks the
-            implicit overfit to Topuria&apos;s stance and Holloway&apos;s
-            volume.
+            The old notebook and the new baseline are different experiments.
+            In the notebook, the backbone was not configured as frozen, the seed
+            was unset, and the inherited test pipeline did not match validation.
+            The command-line pipeline makes those choices explicit.
           </p>
         </Section>
 
-        {/* ───────────────────────────────  § 07 Reproducibility  ─────────────────────────────── */}
-        <Section
-          id="repro"
-          number="§ 07 · Reproducibility"
-          rail={[
-            {
-              heading: "Stack",
-              body: "MMAction2 · PyTorch · SAM2 · Label Studio",
-            },
-            {
-              heading: "Hardware",
-              body: "Single Colab T4 (free tier)",
-            },
-            {
-              heading: "Determinism",
-              body: "Seed 42 · cudnn benchmark off",
-            },
-          ]}
-          extras={
-            <>
-              <CodeBlock>
-                <Code.comment>
-                  # annotations/train.txt — MMAction2 RawframeDataset format
-                </Code.comment>
-                {"\n"}
-                <Code.comment>
-                  {"# <folder> <n_frames> <class_label>   (0 = neutral, 1 = strike)"}
-                </Code.comment>
-                {"\n\n"}
-                {"strike/0  5 1\n"}
-                {"strike/1  5 1\n"}
-                {"neutral/0 5 0\n"}
-                {"neutral/1 5 0\n"}
-                <Code.comment>...</Code.comment>
-                {"\n\n"}
-                <Code.comment># inference (per clip)</Code.comment>
-                {"\n"}
-                <Code.keyword>from</Code.keyword>
-                {" mmaction.apis "}
-                <Code.keyword>import</Code.keyword>
-                {" inference_recognizer, init_recognizer\n\n"}
-                {"model  = init_recognizer("}
-                <Code.string>{"'configs/tsn_r50_strike.py'"}</Code.string>
-                {", "}
-                <Code.string>{"'work_dirs/best.pth'"}</Code.string>
-                {")\n"}
-                {"result = inference_recognizer(model, "}
-                <Code.string>{"'window_w20.mp4'"}</Code.string>
-                {")\n"}
-                <Code.comment>
-                  # result.pred_score → tensor([0.04, 0.96])  →  STRIKE @ 0.96
-                </Code.comment>
-              </CodeBlock>
-
-              <SpecTable
-                rows={[
-                  {
-                    setting: "backbone",
-                    value: "ResNet-50",
-                    notes:
-                      "ImageNet → Kinetics-400 → frozen during fine-tune",
-                  },
-                  {
-                    setting: "checkpoint",
-                    value: "tsn_r50_1x1x3_100e_kinetics400_rgb",
-                    notes: "OpenMMLab model zoo",
-                  },
-                  {
-                    setting: "input",
-                    value: "5 × 224 × 224 RGB",
-                    notes: "center crop · ImageNet norm",
-                  },
-                  {
-                    setting: "head",
-                    value: "FC 2048 → 2 · softmax",
-                    notes: "only learnable parameters",
-                  },
-                  {
-                    setting: "optimizer",
-                    value: "SGD · lr 0.001 · momentum 0.9",
-                    notes: "linear warmup · cosine decay",
-                  },
-                  {
-                    setting: "epochs",
-                    value: "20",
-                    notes: "val acc converged by epoch 9",
-                  },
-                  {
-                    setting: "data format",
-                    value: "RawframeDataset",
-                    notes: "JPEG sequences, not video files",
-                  },
-                ]}
-              />
-            </>
-          }
-        >
-          <p>
-            The annotation format is intentionally simple. Each line in{" "}
-            <span className="font-mono">train.txt</span> is a folder, a frame
-            count, and an integer class label — readable by MMAction2&apos;s
-            RawframeDataset out of the box.
-          </p>
-        </Section>
-
-        {/* ───────────────────────────────  § 08 Live inference  ─────────────────────────────── */}
-        <section
-          id="demo"
-          className="border-b border-rule pb-22 pt-22"
-        >
-          <div className="mb-3.5 font-mono text-[11px] uppercase tracking-[0.22em] text-red-600">
-            § 08 · Live inference
+        <section id="demo" className="scroll-mt-16 border-b border-rule py-8" style={{ fontFamily: "Arial, Helvetica, sans-serif" }}>
+          <div className="mb-5 flex flex-wrap items-baseline justify-between gap-4">
+            <h2 className="text-2xl font-semibold tracking-tight text-ink">Demo</h2>
+            <a href="/demo" className="py-2 text-sm text-ink-mute underline underline-offset-4 hover:text-ink">Open demo →</a>
           </div>
-          <h2 className="mb-7 max-w-[720px] font-serif text-[clamp(28px,3.5vw,40px)] font-normal leading-[1.15] tracking-[-0.01em] text-ink">
-            The model, running on three held-out clips.
-          </h2>
-          <DemoPlayer clips={researchClips} />
+          <RecordedDemoPlayer />
         </section>
-
-        {/* ───────────────────────────────  § 09 Try it  ─────────────────────────────── */}
         <section id="try" className="border-b border-rule py-22">
-          <div className="mb-3.5 font-mono text-[11px] uppercase tracking-[0.18em] text-red-600">
-            § 09 · Try it
-          </div>
+          <div className="mb-3.5 font-mono text-[11px] uppercase tracking-[0.18em] text-red-600">§ 09 · Run locally</div>
           <h2 className="mb-7 max-w-[720px] font-serif text-[clamp(28px,3.5vw,40px)] font-normal leading-[1.15] tracking-[-0.01em] text-ink">
-            Run the pipeline on a clip you choose.
+            Training and evaluation run from the repository.
           </h2>
-          <div className="max-w-[760px]">
-            <Upload />
-          </div>
+          <div className="max-w-[760px]"><Upload /></div>
         </section>
-
-        {/* ───────────────────────────────  Footer  ─────────────────────────────── */}
         <footer className="py-14 font-mono text-[11px] uppercase tracking-[0.14em] text-ink-dim">
           <div className="flex flex-wrap items-center justify-between gap-8">
-            <span>STR1KE · technical preview · MMXXVI</span>
+            <span>Strike · research in progress</span>
             <span className="font-serif text-[12px] italic normal-case tracking-normal">
-              Built by{" "}
-              <a
-                href="https://thomasou.com/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-ink hover:text-red-600"
-              >
-                Thomas Ou
-              </a>
+              Built by <a href="https://thomasou.com/" className="text-ink hover:text-red-600">Thomas Ou</a>
             </span>
-            <span className="flex gap-4">
-              <a
-                href="https://github.com/Smokeybear10"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-ink hover:text-red-600"
-              >
-                github
-              </a>
-              <span aria-hidden>·</span>
-              <a
-                href="https://www.linkedin.com/in/thomasou0/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-ink hover:text-red-600"
-              >
-                linkedin
-              </a>
-            </span>
+            <a href="https://github.com/Smokeybear10/100.RSCH.strike" className="hover:text-red-600">Repository</a>
           </div>
         </footer>
       </div>

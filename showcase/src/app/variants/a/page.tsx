@@ -28,17 +28,17 @@ export default function VariantA() {
             {Array.from({ length: 3 }).map((_, i) => (
               <span key={i} className="flex gap-10 shrink-0">
                 <span>N_STRIKES = 19</span>
-                <span className="text-white/40">//</span>
+                <span className="text-white/40">{"//"}</span>
                 <span>N_NEUTRAL = 19</span>
-                <span className="text-white/40">//</span>
+                <span className="text-white/40">{"//"}</span>
                 <span>WINDOW = 5 FRAMES</span>
-                <span className="text-white/40">//</span>
+                <span className="text-white/40">{"//"}</span>
                 <span>FPS = 30</span>
-                <span className="text-white/40">//</span>
+                <span className="text-white/40">{"//"}</span>
                 <span>BASELINE = KINETICS-400</span>
-                <span className="text-white/40">//</span>
+                <span className="text-white/40">{"//"}</span>
                 <span>TRAINED ON 38 CLIPS</span>
-                <span className="text-white/40">//</span>
+                <span className="text-white/40">{"//"}</span>
               </span>
             ))}
           </div>

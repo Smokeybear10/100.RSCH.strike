@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { heroClips } from "@/lib/demo-data";
@@ -35,7 +35,7 @@ export function ScrollHero() {
 
   const imageCache = useRef<Map<string, HTMLImageElement>>(new Map());
   const canvasSizeRef = useRef({ w: 0, h: 0 });
-  const lastClipWindow = useRef({ clipIndex: -1, windowIndex: -1 });
+  const currentFrameRef = useRef(0);
   const [virtualFrame, setVirtualFrame] = useState(0);
   const [loaded, setLoaded] = useState(false);
 
@@ -47,7 +47,8 @@ export function ScrollHero() {
   const isStrike = prediction?.label === "strike";
   const currentWindow = Math.floor(localFrame / windowSize);
 
-  const drawToCanvas = (vFrame: number) => {
+  const drawToCanvas = useCallback((vFrame: number) => {
+    currentFrameRef.current = vFrame;
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
@@ -71,30 +72,36 @@ export function ScrollHero() {
         if (near) { draw(near); return; }
       }
     }
-  };
+  }, []);
 
   // Preload all frames for all clips
   useEffect(() => {
     const cache = imageCache.current;
     cache.clear();
+    const requested = new Set<string>();
+    let active = true;
     let loadedCount = 0;
     const totalToLoad = TOTAL_VIRTUAL_FRAMES;
     const eager = Math.min(60, totalToLoad);
 
     const loadFrame = (clipIdx: number, frameIdx: number) => {
       const key = `${clipIdx}-${frameIdx}`;
-      if (cache.has(key)) return;
+      if (requested.has(key)) return;
+      requested.add(key);
       const img = new Image();
-      img.src = framePath(heroClips[clipIdx].frameDir, frameIdx);
       img.onload = () => {
+        if (!active) return;
         cache.set(key, img);
+        drawToCanvas(currentFrameRef.current);
         loadedCount++;
         if (loadedCount >= eager) setLoaded(true);
       };
       img.onerror = () => {
+        if (!active) return;
         loadedCount++;
         if (loadedCount >= eager) setLoaded(true);
       };
+      img.src = framePath(heroClips[clipIdx].frameDir, frameIdx);
     };
 
     // Eagerly load first N frames across clips
@@ -109,11 +116,12 @@ export function ScrollHero() {
 
     // Background-load the rest
     const loadRemaining = () => {
+      if (!active) return;
       let batch = 0;
       for (let ci = 0; ci < heroClips.length; ci++) {
         for (let fi = 0; fi < heroClips[ci].totalFrames; fi++) {
           const key = `${ci}-${fi}`;
-          if (!cache.has(key)) {
+          if (!requested.has(key)) {
             loadFrame(ci, fi);
             batch++;
             if (batch >= 20) {
@@ -125,7 +133,8 @@ export function ScrollHero() {
       }
     };
     ric(loadRemaining);
-  }, []);
+    return () => { active = false; };
+  }, [drawToCanvas]);
 
   // Scroll orchestration
   useEffect(() => {
@@ -137,21 +146,16 @@ export function ScrollHero() {
       gsap.to(proxy, {
         frame: TOTAL_VIRTUAL_FRAMES - 1,
         ease: "none",
+        onUpdate: () => {
+          const vf = Math.round(proxy.frame);
+          drawToCanvas(vf);
+          setVirtualFrame(vf);
+        },
         scrollTrigger: {
           trigger: container,
           start: "top top",
           end: "bottom bottom",
           scrub: 0.5,
-          onUpdate: () => {
-            const vf = Math.round(proxy.frame);
-            drawToCanvas(vf);
-            const { clipIndex: ci, localFrame: lf } = virtualToClip(vf);
-            const wi = Math.floor(lf / heroClips[ci].windowSize);
-            if (ci !== lastClipWindow.current.clipIndex || wi !== lastClipWindow.current.windowIndex) {
-              lastClipWindow.current = { clipIndex: ci, windowIndex: wi };
-              setVirtualFrame(vf);
-            }
-          },
         },
       });
 
@@ -206,7 +210,7 @@ export function ScrollHero() {
     }, containerRef);
 
     return () => ctx.revert();
-  }, []);
+  }, [drawToCanvas]);
 
   const progress = virtualFrame / (TOTAL_VIRTUAL_FRAMES - 1);
 
@@ -214,13 +218,13 @@ export function ScrollHero() {
     <section
       ref={containerRef}
       className="relative h-[220vh] bg-paper"
-      aria-label="Strike detection — scroll-scrubbed inference figure"
+      aria-label="Scroll through sample footage with illustrative scores; no model inference"
     >
       <div className="sticky top-0 h-screen overflow-hidden">
         {/* Full-bleed canvas */}
         <canvas
           ref={canvasRef}
-          aria-label="Strike detection video frame playback"
+          aria-label="Sample footage frame playback"
           className="absolute inset-0 w-full h-full object-cover"
           style={{ filter: loaded ? "none" : "blur(20px)" }}
         />
@@ -246,11 +250,11 @@ export function ScrollHero() {
         >
           <div className="mx-auto max-w-[680px]">
             <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-ink-mute">
-              Pre-roll · scroll-scrubbed inference, 5 fps virtual playback
+              Interface example · hand-authored scores
             </div>
             <p className="mt-5 font-serif text-[clamp(20px,2.6vw,32px)] italic leading-[1.3] text-ink">
-              UFC 308 · Topuria vs. Holloway · Round 2 — the model reading
-              every five frames as it goes.
+              Scroll through sample footage. The displayed scores illustrate
+              the interface; they are not measured model predictions.
             </p>
             <div className="mt-7 inline-flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.2em] text-ink-faint">
               <span className="h-px w-6 bg-ink-faint/60" />
@@ -268,15 +272,15 @@ export function ScrollHero() {
           {/* Top-left: model identity */}
           <div className="absolute top-6 left-6 sm:top-8 sm:left-8">
             <div className="font-mono text-[9px] uppercase tracking-[0.18em] text-ink-faint">
-              model
+              interface preview
             </div>
             <div className="mt-1 font-mono text-[11px] tracking-[0.12em] text-ink">
-              tsn · resnet-50 · k400 → mma
+              illustrative scores · no inference
             </div>
           </div>
 
           {/* Top-right: sequence */}
-          <div className="absolute top-6 right-6 sm:top-8 sm:right-8 text-right">
+          <div className="absolute top-20 left-6 sm:top-8 sm:left-auto sm:right-8 sm:text-right">
             <div className="font-mono text-[9px] uppercase tracking-[0.18em] text-ink-faint">
               sequence
             </div>
@@ -326,7 +330,7 @@ export function ScrollHero() {
             {/* Confidence meter — single weight, no orange gradient */}
             <div className="mb-3">
               <div className="mb-1.5 flex items-baseline justify-between font-mono text-[9px] uppercase tracking-[0.18em] text-ink-faint">
-                <span>P(strike)</span>
+                <span>Illustrative score</span>
                 <span
                   className="tnum text-[16px] tracking-tight"
                   style={{

@@ -1,6 +1,6 @@
 "use client";
 
-/* Per-window P(strike) timeline for one clip. Hover anywhere to scrub the
+/* Illustrative per-window score timeline for one clip. Hover anywhere to scrub the
    underlying numbers; peaks above the 0.5 threshold get marked. */
 
 import { useRef, useState } from "react";
@@ -190,7 +190,7 @@ export function ConfidenceTimelineFigure({ clip }: Props) {
           fill="#888"
           letterSpacing="0.15em"
         >
-          WINDOW INDEX (5 frames each, 167ms)
+          WINDOW INDEX ({clip.windowSize} frames each, {(clip.windowSize / clip.fps * 1000).toFixed(0)} ms playback)
         </text>
         <text
           x={12}
@@ -202,7 +202,7 @@ export function ConfidenceTimelineFigure({ clip }: Props) {
           letterSpacing="0.15em"
           transform={`rotate(-90 12 ${PAD_T + innerH / 2})`}
         >
-          P(STRIKE)
+          EXAMPLE SCORE
         </text>
       </svg>
 
@@ -220,12 +220,12 @@ export function ConfidenceTimelineFigure({ clip }: Props) {
               value={`${(hoverPt.p.startFrame / clip.fps).toFixed(2)}s`}
             />
             <Row
-              label="p(strike)"
+              label="score"
               value={hoverPt.p.confidence.toFixed(3)}
               red={hoverPt.p.confidence >= 0.5}
             />
             <Row
-              label="call"
+              label="example"
               value={hoverPt.p.label.toUpperCase()}
               red={hoverPt.p.confidence >= 0.5}
             />

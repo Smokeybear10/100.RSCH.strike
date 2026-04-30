@@ -123,7 +123,7 @@ export function TSNDiagram() {
         fontFamily="ui-monospace, monospace"
         fill="#666"
       >
-        Kinetics-400 pretrain
+        ImageNet initialization
       </text>
       <text
         x={395}

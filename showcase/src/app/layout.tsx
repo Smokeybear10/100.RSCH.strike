@@ -55,20 +55,21 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://strike.thomasou.com"),
   title: "STR1KE — Technical report",
   description:
-    "Strike detection in MMA broadcast video with a 5-frame temporal classifier on top of SAM2 silhouettes. A three-stage pipeline trained on 38 hand-labeled windows.",
+    "MMA strike-attempt detection research: dataset auditing, reproducible baselines, and recorded experiment results. Independent test evaluation is pending.",
   openGraph: {
     title: "STR1KE — Technical report",
     description:
-      "Strike detection in MMA broadcast video with a 5-frame temporal classifier on top of SAM2 silhouettes. Trained on 38 hand-labeled windows.",
+      "MMA strike-attempt detection research: dataset auditing, reproducible baselines, and recorded experiment results. Independent test evaluation is pending.",
     type: "article",
   },
   twitter: {
     card: "summary_large_image",
     title: "STR1KE — Technical report",
     description:
-      "Strike detection in MMA broadcast video. SAM2 + TSN, 38 hand-labeled windows, Kinetics-400 transfer.",
+      "MMA strike-attempt detection research: dataset auditing, reproducible baselines, and recorded experiment results. Independent test evaluation is pending.",
   },
 };
 
@@ -84,12 +85,12 @@ export default function RootLayout({
     >
       <head>
         <Script strategy="beforeInteractive" id="scroll-restore">
-          {`if("scrollRestoration"in history)history.scrollRestoration="manual";window.scrollTo(0,0);`}
+          {`if("scrollRestoration"in history)history.scrollRestoration="manual";if(!location.hash)window.scrollTo(0,0);`}
         </Script>
       </head>
       <body>
         <a
-          href="#abstract"
+          href="#main"
           className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:bg-[var(--red)] focus:text-white focus:px-4 focus:py-2 focus:text-sm focus:font-bold"
         >
           Skip to main content

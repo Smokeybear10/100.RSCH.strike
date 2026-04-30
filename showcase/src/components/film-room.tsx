@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
 import { demoClips } from "@/lib/demo-data";
 import { framePath, getConfidence, getPrediction } from "@/lib/player-utils";
 
@@ -11,9 +11,20 @@ const ric = typeof window !== "undefined" && window.requestIdleCallback
 type Props = { clipIdx: number; onClipChange?: (idx: number) => void; clipProgress?: number };
 
 export function FilmRoom({ clipIdx, onClipChange, clipProgress = 0 }: Props) {
+  const [playing, setPlaying] = useState(true);
+  const clip = demoClips[clipIdx];
+
+  return <FilmRoomClip key={`${clip.id}:${clip.frameDir}:${clip.totalFrames}`}
+    clipIdx={clipIdx} onClipChange={onClipChange} clipProgress={clipProgress}
+    playing={playing} setPlaying={setPlaying} />;
+}
+
+function FilmRoomClip({ clipIdx, onClipChange, clipProgress = 0, playing, setPlaying }: Props & {
+  playing: boolean;
+  setPlaying: Dispatch<SetStateAction<boolean>>;
+}) {
   const [frameIdx, setFrameIdx] = useState(0);
   const [loaded, setLoaded] = useState(false);
-  const [playing, setPlaying] = useState(true);
   const [hovering, setHovering] = useState(false);
 
   // Clip name visible for first 60% of each clip's scroll, then fades out over next 20%
@@ -29,45 +40,60 @@ export function FilmRoom({ clipIdx, onClipChange, clipProgress = 0 }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const cacheRef = useRef<Map<number, HTMLImageElement>>(new Map());
   const canvasSizeRef = useRef({ w: 0, h: 0 });
+  const currentFrameRef = useRef(0);
 
   // Preload frames when clip changes
   useEffect(() => {
     const cache = new Map<number, HTMLImageElement>();
     cacheRef.current = cache;
-    setLoaded(false);
-    setFrameIdx(0);
 
     let loadedCount = 0;
+    let active = true;
     const eager = Math.min(30, totalFrames);
+
+    const finishFrame = (i: number) => {
+      if (i >= eager) return;
+      loadedCount++;
+      if (loadedCount >= eager) setLoaded(true);
+    };
 
     const loadFrame = (i: number) => {
       const img = new Image();
-      img.src = framePath(frameDir, i);
       img.onload = () => {
+        if (!active) return;
         cache.set(i, img);
-        loadedCount++;
-        if (loadedCount >= eager) setLoaded(true);
+        const canvas = canvasRef.current;
+        if (canvas && i === currentFrameRef.current) {
+          canvas.width = img.naturalWidth;
+          canvas.height = img.naturalHeight;
+          canvasSizeRef.current = { w: img.naturalWidth, h: img.naturalHeight };
+          canvas.getContext("2d")?.drawImage(img, 0, 0);
+        }
+        finishFrame(i);
       };
       img.onerror = () => {
-        loadedCount++;
-        if (loadedCount >= eager) setLoaded(true);
+        if (active) finishFrame(i);
       };
+      img.src = framePath(frameDir, i);
     };
 
     for (let i = 0; i < eager; i++) loadFrame(i);
 
     let bg = eager;
     const loadBatch = () => {
+      if (!active) return;
       const end = Math.min(bg + 20, totalFrames);
       for (let i = bg; i < end; i++) loadFrame(i);
       bg = end;
       if (bg < totalFrames) ric(loadBatch);
     };
     if (eager < totalFrames) ric(loadBatch);
+    return () => { active = false; };
   }, [totalFrames, frameDir]);
 
   // Draw current frame
   useEffect(() => {
+    currentFrameRef.current = frameIdx;
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
@@ -91,7 +117,7 @@ export function FilmRoom({ clipIdx, onClipChange, clipProgress = 0 }: Props) {
         if (near) { draw(near); return; }
       }
     }
-  }, [frameIdx]);
+  }, [frameIdx, loaded]);
 
   // Auto-playback loop
   useEffect(() => {

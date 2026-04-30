@@ -1,3 +1,4 @@
+import Link from "next/link";
 import {
   Anton,
   Oswald,
@@ -55,5 +56,13 @@ export default function VariantsLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <div className={`${fontVars} relative z-20`}>{children}</div>;
+  return (
+    <div className={`${fontVars} relative z-20`}>
+      <aside className="sticky top-0 z-[100] border-b border-amber-500/40 bg-black px-6 py-3 font-mono text-xs leading-relaxed text-amber-100">
+        Archived design study. Scores and performance claims on this page are unverified mock content.
+        {" "}<Link href="/" className="underline">Read the current research report.</Link>
+      </aside>
+      {children}
+    </div>
+  );
 }

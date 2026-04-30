@@ -26,7 +26,7 @@ export function FailGrid({ items }: { items: FailItem[] }) {
             {f.title}
           </h4>
           <span className="self-start bg-red-600/10 px-2 py-0.5 font-mono text-[11px] tracking-[0.08em] text-red-600">
-            P(strike) = {f.conf}
+            {f.conf}
           </span>
           <p className="m-0 font-serif text-[13px] leading-[1.5] text-ink-mute">
             {f.why}

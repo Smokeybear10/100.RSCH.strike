@@ -12,12 +12,25 @@ import {
 } from "@/lib/player-utils";
 import { ConfidenceTimeline } from "./confidence-timeline";
 
+const ric = typeof window !== "undefined" && window.requestIdleCallback
+  ? window.requestIdleCallback
+  : (callback: () => void) => setTimeout(callback, 1) as unknown as number;
+
 type Props = {
   clips: Clip[];
 };
 
 export function HeroPlayer({ clips }: Props) {
   const [activeClipIndex, setActiveClipIndex] = useState(0);
+
+  return <HeroClipPlayer key={`${clips[activeClipIndex].id}:${clips[activeClipIndex].frameDir}:${clips[activeClipIndex].totalFrames}`}
+    clips={clips} activeClipIndex={activeClipIndex} onClipChange={setActiveClipIndex} />;
+}
+
+function HeroClipPlayer({ clips, activeClipIndex, onClipChange }: Props & {
+  activeClipIndex: number;
+  onClipChange: (index: number) => void;
+}) {
   const [currentFrame, setCurrentFrame] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
   const [isDragging, setIsDragging] = useState(false);
@@ -28,6 +41,7 @@ export function HeroPlayer({ clips }: Props) {
   const animationRef = useRef<number>(0);
   const lastFrameTime = useRef<number>(0);
   const scrubRef = useRef<HTMLDivElement>(null);
+  const currentFrameRef = useRef(0);
 
   const clip = clips[activeClipIndex];
   const { totalFrames, fps, windowSize, predictions, frameDir } = clip;
@@ -42,37 +56,50 @@ export function HeroPlayer({ clips }: Props) {
   useEffect(() => {
     const cache = imageCache.current;
     cache.clear();
-    setImagesLoaded(false);
 
     let loaded = 0;
+    let active = true;
     const eager = Math.min(30, totalFrames);
+
+    const finishFrame = (i: number) => {
+      if (i >= eager) return;
+      loaded++;
+      if (loaded >= eager) setImagesLoaded(true);
+    };
 
     const loadFrame = (i: number) => {
       const path = framePath(frameDir, i);
       if (cache.has(path)) return;
       const img = new Image();
-      img.src = path;
       img.onload = () => {
+        if (!active) return;
         cache.set(path, img);
-        loaded++;
-        if (loaded >= eager) setImagesLoaded(true);
+        const canvas = canvasRef.current;
+        if (canvas && i === currentFrameRef.current) {
+          canvas.width = img.naturalWidth;
+          canvas.height = img.naturalHeight;
+          canvas.getContext("2d")?.drawImage(img, 0, 0);
+        }
+        finishFrame(i);
       };
       img.onerror = () => {
-        loaded++;
-        if (loaded >= eager) setImagesLoaded(true);
+        if (active) finishFrame(i);
       };
+      img.src = path;
     };
 
     for (let i = 0; i < eager; i++) loadFrame(i);
 
     let bgIndex = eager;
     const loadBatch = () => {
+      if (!active) return;
       const end = Math.min(bgIndex + 10, totalFrames);
       for (let i = bgIndex; i < end; i++) loadFrame(i);
       bgIndex = end;
-      if (bgIndex < totalFrames) requestIdleCallback(loadBatch);
+      if (bgIndex < totalFrames) ric(loadBatch);
     };
-    if (eager < totalFrames) requestIdleCallback(loadBatch);
+    if (eager < totalFrames) ric(loadBatch);
+    return () => { active = false; };
   }, [frameDir, totalFrames]);
 
   const drawFrame = useCallback(
@@ -98,7 +125,7 @@ export function HeroPlayer({ clips }: Props) {
   );
 
   useEffect(() => {
-    if (!isPlaying || isDragging) return;
+    if (!imagesLoaded || !isPlaying || isDragging) return;
 
     const interval = 1000 / fps;
 
@@ -115,11 +142,12 @@ export function HeroPlayer({ clips }: Props) {
 
     animationRef.current = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(animationRef.current);
-  }, [isPlaying, isDragging, fps, totalFrames]);
+  }, [imagesLoaded, isPlaying, isDragging, fps, totalFrames]);
 
   useEffect(() => {
+    currentFrameRef.current = currentFrame;
     drawFrame(currentFrame);
-  }, [currentFrame, drawFrame]);
+  }, [currentFrame, imagesLoaded, drawFrame]);
 
   const scrubToPosition = useCallback(
     (clientX: number) => {
@@ -187,7 +215,7 @@ export function HeroPlayer({ clips }: Props) {
           <button
             key={c.id}
             onClick={() => {
-              setActiveClipIndex(i);
+              onClipChange(i);
               setCurrentFrame(0);
               setIsPlaying(true);
             }}

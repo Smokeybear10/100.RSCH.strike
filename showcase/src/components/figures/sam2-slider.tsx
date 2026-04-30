@@ -22,18 +22,34 @@ export function SAM2Slider() {
   return (
     <div
       ref={ref}
-      className="relative aspect-video cursor-ew-resize select-none overflow-hidden border border-rule bg-black"
-      onMouseDown={(e) => setFromEvent(e.clientX)}
-      onMouseMove={(e) => {
+      role="slider"
+      tabIndex={0}
+      aria-label="Broadcast and SAM2 mask comparison"
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-valuenow={Math.round(pos)}
+      aria-valuetext={`${Math.round(pos)}% broadcast, ${100 - Math.round(pos)}% mask`}
+      className="relative aspect-video touch-pan-y cursor-ew-resize select-none overflow-hidden border border-rule bg-black outline-none focus-visible:ring-2 focus-visible:ring-red-600"
+      onPointerDown={(e) => {
+        e.currentTarget.setPointerCapture(e.pointerId);
+        setFromEvent(e.clientX);
+      }}
+      onPointerMove={(e) => {
         if (e.buttons !== 0) setFromEvent(e.clientX);
       }}
-      onTouchMove={(e) => setFromEvent(e.touches[0].clientX)}
+      onKeyDown={(e) => {
+        if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(e.key)) return;
+        e.preventDefault();
+        if (e.key === "Home") setPos(0);
+        else if (e.key === "End") setPos(100);
+        else setPos((value) => Math.max(0, Math.min(100, value + (e.key === "ArrowRight" ? 1 : -1))));
+      }}
     >
       {/* Back layer — broadcast frame (always visible) */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={`/clips/knockdown/${FRAME}`}
-        alt="Original broadcast frame from Topuria vs. Holloway, round 2"
+        alt="Original broadcast frame from the knockdown example"
         className="absolute inset-0 h-full w-full object-cover"
         draggable={false}
       />
@@ -48,7 +64,7 @@ export function SAM2Slider() {
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={`/clips/knockdown-masked/${FRAME}`}
-          alt="SAM2 silhouette mask of the same frame, fighters isolated on black"
+          alt="The same frame with colored SAM2 overlays on both fighters"
           className="absolute inset-0 h-full w-full object-cover"
           draggable={false}
         />
