@@ -13,25 +13,32 @@ export function DemoPlayer({ clips, model }: Props) {
   const [clipIdx, setClipIdx] = useState(0);
   const [playing, setPlaying] = useState(false);
 
-  return <ClipPlayer key={clips[clipIdx].id} clips={clips} model={model} clipIdx={clipIdx}
-    onClipChange={setClipIdx} playing={playing} setPlaying={setPlaying} />;
+  return <div className={styles.player}>
+    <div className={styles.clipTabs} role="group" aria-label="Choose a demo clip">
+      {clips.map((item, index) => <button key={item.id} type="button" aria-pressed={index === clipIdx}
+        onClick={() => { setPlaying(false); setClipIdx(index); }}>{item.name}</button>)}
+    </div>
+    <ClipPlayer key={clips[clipIdx].id} clips={clips} model={model} clipIdx={clipIdx}
+      playing={playing} setPlaying={setPlaying} />
+  </div>;
 }
 
-function ClipPlayer({ clips, model, clipIdx, onClipChange, playing, setPlaying }: Props & {
+function ClipPlayer({ clips, model, clipIdx, playing, setPlaying }: Props & {
   clipIdx: number;
-  onClipChange: (index: number) => void;
   playing: boolean;
   setPlaying: Dispatch<SetStateAction<boolean>>;
 }) {
   const [frameIdx, setFrameIdx] = useState(0);
-  const [loaded, setLoaded] = useState(false);
   const [frameStatus, setFrameStatus] = useState<FrameStatus>("loading");
+  const [buffering, setBuffering] = useState(false);
+  const [playbackError, setPlaybackError] = useState<number | null>(null);
   const clip = clips[clipIdx];
   const { totalFrames, fps, windowSize, predictions, frameDir } = clip;
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const cacheRef = useRef(new Map<number, HTMLImageElement>());
   const failedRef = useRef(new Set<number>());
   const currentFrameRef = useRef(0);
+  const requestFramesRef = useRef<(frame: number, ahead: number) => void>(() => {});
 
   const drawFrame = useCallback((frame: number) => {
     const canvas = canvasRef.current;
@@ -58,55 +65,106 @@ function ClipPlayer({ clips, model, clipIdx, onClipChange, playing, setPlaying }
     cacheRef.current = cache;
     failedRef.current = failed;
     let active = true;
-    let completed = 0;
-    const eager = Math.min(30, totalFrames);
-    let timer: ReturnType<typeof setTimeout>;
+    let queue: number[] = [];
+    const pending = new Map<number, { image: HTMLImageElement; timeout: ReturnType<typeof setTimeout> }>();
 
-    function finish(index: number) {
-      if (!active) return;
-      if (index === currentFrameRef.current) drawFrame(index);
-      if (index < eager && ++completed === eager) setLoaded(true);
+    function cancel(index: number) {
+      const request = pending.get(index);
+      if (!request) return;
+      clearTimeout(request.timeout);
+      request.image.onload = null;
+      request.image.onerror = null;
+      request.image.src = "";
+      pending.delete(index);
     }
-    function load(index: number) {
-      const image = new Image();
-      image.onload = () => { if (active) { cache.set(index, image); finish(index); } };
-      image.onerror = () => { if (active) { failed.add(index); finish(index); } };
-      image.src = framePath(frameDir, index);
+
+    function pump() {
+      while (active && pending.size < 4 && queue.length) {
+        const index = queue.shift()!;
+        const image = new Image();
+        image.decoding = "async";
+        const finish = (success: boolean) => {
+          const request = pending.get(index);
+          if (!active || !request) return;
+          clearTimeout(request.timeout);
+          image.onload = null;
+          image.onerror = null;
+          pending.delete(index);
+          if (success) {
+            cache.set(index, image);
+            for (const cached of cache.keys()) {
+              if (cache.size <= 32) break;
+              if (cached !== currentFrameRef.current) cache.delete(cached);
+            }
+          } else {
+            failed.add(index);
+            image.src = "";
+          }
+          if (index === currentFrameRef.current) drawFrame(index);
+          pump();
+        };
+        pending.set(index, { image, timeout: setTimeout(() => finish(false), 15000) });
+        image.onload = () => finish(true);
+        image.onerror = () => finish(false);
+        image.src = framePath(frameDir, index);
+      }
     }
-    for (let index = 0; index < eager; index++) load(index);
-    let next = eager;
-    function loadBatch() {
-      if (!active) return;
-      const end = Math.min(next + 20, totalFrames);
-      for (let index = next; index < end; index++) load(index);
-      next = end;
-      if (next < totalFrames) timer = setTimeout(loadBatch, 20);
-    }
-    timer = setTimeout(loadBatch, 20);
-    return () => { active = false; clearTimeout(timer); };
+
+    requestFramesRef.current = (frame, ahead) => {
+      const wanted = Array.from({ length: Math.min(ahead + 1, totalFrames) }, (_, offset) => (frame + offset) % totalFrames);
+      for (const index of pending.keys()) {
+        if (!wanted.includes(index)) cancel(index);
+      }
+      queue = wanted.filter((index) => !cache.has(index) && !failed.has(index) && !pending.has(index));
+      pump();
+    };
+    return () => {
+      active = false;
+      requestFramesRef.current = () => {};
+      for (const index of pending.keys()) cancel(index);
+    };
   }, [drawFrame, frameDir, totalFrames]);
 
   useEffect(() => {
     currentFrameRef.current = frameIdx;
     drawFrame(frameIdx);
-  }, [drawFrame, frameIdx]);
+    requestFramesRef.current(frameIdx, playing ? 12 : 0);
+  }, [drawFrame, frameIdx, playing]);
 
   useEffect(() => {
-    if (!loaded || !playing) return;
+    if (!playing) return;
     let raf: number;
     let last = performance.now();
     const interval = 1000 / fps;
     const tick = (now: number) => {
-      const steps = Math.floor((now - last) / interval);
-      if (steps > 0) {
-        last += steps * interval;
-        setFrameIdx((frame) => (frame + steps) % totalFrames);
+      if (now - last >= interval) {
+        last = now;
+        const next = (currentFrameRef.current + 1) % totalFrames;
+        if (cacheRef.current.has(next)) {
+          currentFrameRef.current = next;
+          drawFrame(next);
+          setFrameIdx(next);
+          setBuffering(false);
+        } else if (failedRef.current.has(next)) {
+          setPlaybackError(next);
+          setBuffering(false);
+          setPlaying(false);
+          return;
+        } else {
+          setBuffering(true);
+        }
       }
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [fps, loaded, playing, totalFrames]);
+  }, [drawFrame, fps, playing, setPlaying, totalFrames]);
+
+  useEffect(() => {
+    const pauseWhenHidden = () => { if (document.hidden) setPlaying(false); };
+    document.addEventListener("visibilitychange", pauseWhenHidden);
+    return () => document.removeEventListener("visibilitychange", pauseWhenHidden);
+  }, [setPlaying]);
 
   const windowIdx = Math.floor(frameIdx / windowSize);
   const prediction = getPrediction(frameIdx, predictions, windowSize);
@@ -117,31 +175,49 @@ function ClipPlayer({ clips, model, clipIdx, onClipChange, playing, setPlaying }
 
   function seek(frame: number) {
     setPlaying(false);
-    setFrameIdx(Math.max(0, Math.min(totalFrames - 1, frame)));
+    setBuffering(false);
+    setPlaybackError(null);
+    const next = Math.max(0, Math.min(totalFrames - 1, frame));
+    currentFrameRef.current = next;
+    drawFrame(next);
+    setFrameIdx(next);
+  }
+
+  function retry() {
+    const frame = playbackError ?? currentFrameRef.current;
+    failedRef.current.delete(frame);
+    setPlaybackError(null);
+    if (frame === currentFrameRef.current) {
+      drawFrame(frame);
+      requestFramesRef.current(frame, 0);
+    } else {
+      setPlaying(true);
+    }
+  }
+
+  function togglePlayback() {
+    if (playbackError !== null) retry();
+    else setPlaying((value) => !value);
   }
 
   return (
-    <div className={styles.player}>
-      <div className={styles.clipTabs} role="group" aria-label="Choose a demo clip">
-        {clips.map((item, index) => <button key={item.id} type="button" aria-pressed={index === clipIdx}
-          onClick={() => { setPlaying(false); onClipChange(index); }}>{item.name}</button>)}
-      </div>
-
+    <>
       <div className={styles.stage}>
         <canvas ref={canvasRef} aria-label={`${clip.name}, frame ${frameIdx + 1} of ${totalFrames}`} />
-        {frameStatus !== "ready" && <div className={styles.frameStatus} role="status">
-          {frameStatus === "loading" ? "Loading footage…" : <><strong>This frame could not load.</strong><span>Choose another clip or reload the page.</span></>}
+        {(frameStatus !== "ready" || playbackError !== null) && <div className={styles.frameStatus} role="status">
+          {frameStatus === "loading" ? "Loading footage…" : <><strong>{playbackError === null ? "This frame" : "The next frame"} could not load.</strong><button type="button" onClick={retry}>Retry frame</button></>}
         </div>}
-        <button className={styles.stageControl} type="button" disabled={!loaded || frameStatus !== "ready"}
-          aria-label={playing ? "Pause playback" : `Play ${clip.name}`} onClick={() => setPlaying((value) => !value)}>
-          {!playing && frameStatus === "ready" && <span className={styles.playButton} aria-hidden="true">
+        {playing && buffering && <span className={styles.bufferStatus} role="status">Loading next frame…</span>}
+        <button className={styles.stageControl} type="button" disabled={frameStatus !== "ready" || playbackError !== null}
+          aria-label={playing ? "Pause playback" : `Play ${clip.name}`} onClick={togglePlayback}>
+          {!playing && frameStatus === "ready" && playbackError === null && <span className={styles.playButton} aria-hidden="true">
             <svg viewBox="0 0 24 24"><path d="m8 5 11 7-11 7z" /></svg>
           </span>}
         </button>
       </div>
 
       <div className={styles.transport}>
-        <button type="button" disabled={!loaded || frameStatus !== "ready"} onClick={() => setPlaying((value) => !value)}>
+        <button type="button" disabled={frameStatus !== "ready"} onClick={togglePlayback}>
           <svg viewBox="0 0 16 16" aria-hidden="true">{playing ? <path d="M4 3h3v10H4zm5 0h3v10H9z" /> : <path d="M4 2l10 6-10 6z" />}</svg>
           {playing ? "Pause" : "Play"}
         </button>
@@ -151,7 +227,7 @@ function ClipPlayer({ clips, model, clipIdx, onClipChange, playing, setPlaying }
       </div>
 
       <div className={styles.readout}>
-        <div><span className={styles.caption}>Prediction</span><strong>{frameStatus !== "ready" ? "Frame unavailable" : score >= model.threshold ? "Attempt" : "No attempt"}</strong></div>
+        <div><span className={styles.caption}>Prediction</span><strong>{frameStatus === "loading" ? "Loading frame…" : frameStatus === "unavailable" ? "Frame unavailable" : score >= model.threshold ? "Attempt" : "No attempt"}</strong></div>
         <div><span className={styles.caption}>Score</span><strong className={styles.score}>{frameStatus === "ready" ? score.toFixed(3) : "—"}</strong></div>
         <div className={styles.windowNav}>
           <button type="button" aria-label="Previous scored window" disabled={windowIdx === 0} onClick={() => seek((windowIdx - 1) * windowSize)}>←</button>
@@ -177,6 +253,6 @@ function ClipPlayer({ clips, model, clipIdx, onClipChange, playing, setPlaying }
           <code>{model.checkpointSha256}</code>
         </details>
       </div>
-    </div>
+    </>
   );
 }

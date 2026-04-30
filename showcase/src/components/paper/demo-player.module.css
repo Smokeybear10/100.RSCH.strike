@@ -1,8 +1,8 @@
 .player {
-  --text: #eeeae1;
-  --muted: #b1afa5;
-  --line: #383832;
-  --surface: #171715;
+  --text: #e8e6e1;
+  --muted: #b8b5af;
+  --line: #383833;
+  --surface: #121212;
   color: var(--text);
   font: 14px/1.5 Arial, Helvetica, sans-serif;
   min-width: 0;
@@ -10,24 +10,30 @@
 .player button, .player input { font: inherit; }
 .player button { cursor: pointer; }
 .player button:disabled { opacity: .35; cursor: not-allowed; }
-.player :is(button, input, summary):focus-visible { outline: 2px solid #e5b583; outline-offset: 3px; }
+.player :is(button, input, summary):focus-visible { outline: 2px solid var(--text); outline-offset: 3px; }
 .clipTabs { display: flex; align-items: center; flex-wrap: wrap; gap: 0 28px; border-bottom: 1px solid var(--line); }
 .clipTabs button { padding: 10px 0; min-height: 44px; border: 0; border-bottom: 2px solid transparent; background: transparent; color: var(--muted); }
 .clipTabs button[aria-pressed=true] { border-bottom-color: var(--text); color: var(--text); }
 .clipTabs button:hover { color: white; }
-.stage { position: relative; height: clamp(240px, calc(100svh - 350px), 460px); background: #050505; margin-top: 16px; overflow: hidden; }
+.stage { position: relative; aspect-ratio: 16 / 9; max-height: 460px; background: #050505; margin-top: 16px; overflow: hidden; }
 .stage canvas { display: block; width: 100%; height: 100%; object-fit: contain; }
 .stageControl { position: absolute; inset: 0; display: grid; place-items: center; border: 0; background: transparent; width: 100%; }
 .stageControl:focus-visible { outline-offset: -3px !important; }
 .playButton { display: grid; place-items: center; width: 64px; height: 64px; border: 1px solid #ffffff40; border-radius: 50%; background: #000b; color: white; }
 .playButton svg { width: 30px; height: 30px; fill: currentColor; }
 .stageControl:hover .playButton { background: #000e; border-color: #ffffff80; }
-.frameStatus { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 8px; padding: 24px; color: var(--muted); text-align: center; }
+.frameStatus { position: absolute; z-index: 1; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 8px; padding: 24px; background: #050505db; color: var(--muted); text-align: center; }
 .frameStatus strong { color: var(--text); font-weight: 500; }
+.frameStatus button { min-height: 44px; margin-top: 8px; padding: 8px 16px; border: 1px solid var(--line); border-radius: 3px; background: var(--surface); color: var(--text); }
+.bufferStatus { position: absolute; z-index: 1; left: 12px; bottom: 12px; padding: 6px 10px; border-radius: 3px; background: #000b; color: var(--text); font-size: 12px; pointer-events: none; }
 .transport { display: flex; align-items: center; gap: 20px; padding: 8px 16px; background: var(--surface); border-bottom: 1px solid var(--line); }
 .transport button { display: flex; align-items: center; gap: 10px; min-width: 75px; min-height: 44px; padding: 8px 0; border: 0; background: transparent; color: var(--text); font-size: 13px; }
 .transport button svg { width: 14px; height: 14px; fill: currentColor; }
-.transport input { width: 100%; min-width: 0; flex: 1; height: 44px; accent-color: var(--text); cursor: pointer; }
+.transport input { width: 100%; min-width: 0; flex: 1; height: 44px; appearance: none; background: transparent; cursor: pointer; }
+.transport input::-webkit-slider-runnable-track { height: 4px; border-radius: 2px; background: #77756c; }
+.transport input::-webkit-slider-thumb { appearance: none; width: 16px; height: 16px; margin-top: -6px; border: 0; border-radius: 50%; background: var(--text); }
+.transport input::-moz-range-track { height: 4px; border-radius: 2px; background: #77756c; }
+.transport input::-moz-range-thumb { width: 16px; height: 16px; border: 0; border-radius: 50%; background: var(--text); }
 .frameCounter { color: var(--muted); font-size: 12px; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .readout { display: flex; align-items: center; gap: 24px; padding: 12px 0; }
 .readout > div:not(.windowNav) { display: flex; align-items: baseline; gap: 8px; }
