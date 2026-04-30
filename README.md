@@ -6,7 +6,7 @@ A research pipeline for labeling and detecting strike attempts in MMA footage, i
 
 ![Strike footage](assets/demos/hero-title.gif)
 
-The current dataset is a pilot, not a generalization benchmark. It contains 38 five-frame clips and 190 frames. Both historical test clips also occur in validation; fight IDs and timestamps were not recorded. There is no independent test result yet. The showcase distinguishes recorded notebook metrics, saved checkpoint predictions, and illustrative figures.
+The current dataset is a pilot, not a generalization benchmark. It contains 38 five-frame clips and 190 frames. Both historical test clips also occur in validation; fight IDs and timestamps were not recorded. There is no independent test result yet. The [research notebook](model/notebooks/Research_Notes.ipynb) collects the experiment notes, verifies the saved training logs, and checks the recorded demo inputs.
 
 ## Quick Start
 
@@ -97,9 +97,9 @@ npm ci
 npm run dev
 ```
 
-Open http://localhost:2100. The demo at `/demo` plays recorded checkpoint predictions on the displayed frames; their accuracy has not been measured. The research report labels its illustrative figures separately. The workspace at `/workspace` reviews local footage and imports saved model scores; new inference runs locally in Python.
+Open http://localhost:2100 for the annotation workspace, also available at `/workspace`. The demo at `/demo` plays recorded checkpoint predictions on the displayed frames; their accuracy has not been measured. Research notes live in the [notebook](model/notebooks/Research_Notes.ipynb). New inference runs locally in Python.
 
-Regenerate the historical chart from saved notebook output:
+Regenerate the historical metrics from saved notebook output:
 
 ```bash
 python model/export_notebook_history.py
@@ -127,9 +127,9 @@ model/
   annotations.py             # Workspace export validation
   prepare.py                 # Timestamped video extraction
   predict.py                 # Saved-checkpoint review scores
-  export_notebook_history.py # Recorded historical chart, with source hash
-  notebooks/                 # Original experiments
-showcase/                    # Research report, recorded demo, and annotation workspace
+  export_notebook_history.py # Recorded historical metrics, with source hash
+  notebooks/                 # Research notes and original experiments
+showcase/                    # Recorded demo and annotation workspace
 PROJECT_OVERVIEW.md          # Labeling and manifest reference
 ```
 
