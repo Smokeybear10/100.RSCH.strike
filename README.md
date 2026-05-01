@@ -106,5 +106,10 @@ The pilot lacks complete fight identities and source timestamps. Neighboring win
 
 The current task classifies windows. It does not establish landed-strike counts, fighter attribution, event boundaries, calibrated probabilities, or the benefit of segmentation. Answering the original question requires reviewed examples from separate fights and a matched raw/masked evaluation on reserved footage.
 
+## License
+
+Original code and documentation are available under the [MIT License](LICENSE). Third-party artwork, broadcast-derived demo media, dependencies, datasets, and pretrained weights retain their own terms; see [third-party notices](THIRD_PARTY_NOTICES.md).
+
+Local checks and commit conventions are in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 Built by Thomas Ou
