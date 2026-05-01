@@ -1,24 +1,26 @@
-# Strike | Strike Attempt Classification
+# Strike | MMA Action Recognition Research
 
 **Live demo: [Recorded predictions](https://strike.thomasou.com/demo) · [Annotation workspace](https://strike.thomasou.com/workspace)**
 
-I built Strike to study whether short video windows can identify MMA strike attempts and whether masking the background changes the result.
+Strike studies strike-attempt classification in MMA footage. The central question is whether isolating fighters from the broadcast background improves generalization to unseen fights.
 
-## Start Here
+## Research Record
 
-Open [Research_Notes.ipynb](model/notebooks/Research_Notes.ipynb). It contains the label definition, historical training results, current baseline, recorded predictions, and executable checks of the saved artifacts. The saved outputs can be read without installing anything.
+The [research notebook](model/notebooks/Research_Notes.ipynb) contains the study question, methods, saved results, and executable artifact checks. Its saved outputs can be read on GitHub without installing anything. The [experiment protocol](PROJECT_OVERVIEW.md) defines labels, fight-level splits, and the paired comparison. Implementation lives in [`model/`](model/); the website supports annotation and inspection of recorded outputs.
 
 The evidence is a 38-window pilot and recorded development predictions. **Accuracy on unseen fights has not been established, and there is no measured raw-versus-masked result.**
 
 [Check saved artifacts](#check-the-saved-artifacts) · [Run an experiment](#run-a-new-experiment) · [Data protocol](PROJECT_OVERVIEW.md)
 
-## Question and Method
+## Method and Comparison
 
 The target is a **strike attempt**, including a blocked or missed punch, kick, knee, or elbow. Contact is a separate annotation. Uncertain windows stay outside the binary training labels.
 
 The current [appearance baseline](model/baseline.py) freezes an ImageNet ResNet-50, averages the feature vectors from five frames, and trains a two-class linear head. Frames are resized to a 256-pixel short edge, center-cropped to 224 pixels, and normalized with ImageNet statistics. Averaging discards frame order, so this baseline does not explicitly model motion direction or timing.
 
 The experiment code supports raw and masked inputs from the same windows. A controlled comparison requires matching fight assignments, labels, seed, preprocessing, and training settings. Checkpoint selection uses validation loss; reserved test fights are evaluated separately. The [data protocol](PROJECT_OVERVIEW.md) defines the manifest, annotation rules, leakage checks, and comparison procedure.
+
+Masking could remove broadcast shortcuts, but it could also discard useful context or obscure limbs. The comparison therefore needs both variants on the same reserved fights, with per-fight metrics and paired errors. The notebook sets out the planned comparison and its remaining data requirements. A benefit from masking has not been measured.
 
 ## What the Saved Runs Show
 
@@ -67,11 +69,12 @@ source .venv/bin/activate
 python -m pip install -r model/requirements.txt
 ```
 
-These commands require your own reviewed manifest and frames following [PROJECT_OVERVIEW.md](PROJECT_OVERVIEW.md). Assign entire fights, including replays, to train, validation, or test. Workspace exports are development data; they do not provide an untouched test set.
+These commands require your own reviewed manifest and frames following [PROJECT_OVERVIEW.md](PROJECT_OVERVIEW.md). Assign entire fights, including replays, to train, validation, or test. Workspace exports are development data; they do not provide an untouched test set. For the paired experiment, include matching raw and masked frames for every window.
 
 ```bash
 python -m model.data audit --manifest data-local/reviewed.json --data-root /path/to/frames --output runs/data-audit.json
 python -m model.train --manifest data-local/reviewed.json --data-root /path/to/frames --output runs/raw --variant raw
+python -m model.train --manifest data-local/reviewed.json --data-root /path/to/frames --output runs/masked --variant masked
 ```
 
 The default run uses CPU, seed 42, and 20 epochs. ImageNet weights download on first use. The run saves its configuration, dataset audit, training history, selected checkpoint, and per-window validation predictions. Use new output paths for each experiment.
@@ -80,13 +83,15 @@ After freezing the design and model choice, evaluate the reserved test fights:
 
 ```bash
 python -m model.evaluate --run runs/raw --manifest data-local/reviewed.json --data-root /path/to/frames
+python -m model.evaluate --run runs/masked --manifest data-local/reviewed.json --data-root /path/to/frames
+python -m model.compare --raw runs/raw --masked runs/masked --split test --output runs/comparison.json
 ```
 
-Results are written to `runs/raw/evaluation/test_metrics.json` and `test_predictions.csv`, including per-fight metrics. The notebook has the preparation and prediction-import commands; [compare.py](model/compare.py) checks paired raw/masked runs. None of these commands supplies the missing independent dataset or turns the historical pilot into a benchmark.
+Each run writes `evaluation/test_metrics.json` and `test_predictions.csv`, including per-fight metrics. `runs/comparison.json` records masked-minus-raw differences and paired prediction changes after checking that the runs match. The notebook has the preparation and prediction-import commands. These commands describe the experiment workflow; the independent dataset and resulting comparison are still outstanding.
 
-## Review Footage
+## Supporting Research Tools
 
-The browser workspace labels local footage, saves annotations in IndexedDB, and exports JSON backups. Videos stay on the device and must be reconnected after reloading. Saved model scores can be imported without replacing human labels. Inference runs separately in Python.
+The browser workspace labels local footage, saves annotations in IndexedDB, and exports JSON backups for the Python workflow. The demo lets readers inspect recorded model outputs against the input frames. Videos stay on the device and must be reconnected after reloading. Saved model scores can be imported without replacing human labels. Inference runs separately in Python.
 
 ![Recorded predictions alongside their source frames in Strike](assets/demos/strike-demo.png)
 

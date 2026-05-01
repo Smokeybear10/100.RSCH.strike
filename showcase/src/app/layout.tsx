@@ -11,20 +11,20 @@ const jetbrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://strike.thomasou.com"),
-  title: "Strike — Video review",
+  title: "Strike — MMA video research",
   description:
-    "Review MMA footage, label strike attempts, and inspect recorded model predictions.",
+    "Annotation and recorded prediction tools for research on MMA strike-attempt classification.",
   openGraph: {
-    title: "Strike — Video review",
+    title: "Strike — MMA video research",
     description:
-      "Review MMA footage, label strike attempts, and inspect recorded model predictions.",
+      "Annotation and recorded prediction tools for research on MMA strike-attempt classification.",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Strike — Video review",
+    title: "Strike — MMA video research",
     description:
-      "Review MMA footage, label strike attempts, and inspect recorded model predictions.",
+      "Annotation and recorded prediction tools for research on MMA strike-attempt classification.",
   },
 };
 

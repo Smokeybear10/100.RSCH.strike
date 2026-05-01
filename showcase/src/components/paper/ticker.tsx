@@ -23,6 +23,10 @@ export function Ticker({ links = DEFAULT_LINKS, active, onNavigate }: TickerProp
             {l.label}
           </Link>
         ))}
+        <a href="https://github.com/Smokeybear10/100.RSCH.strike/blob/main/model/notebooks/Research_Notes.ipynb" target="_blank" rel="noreferrer" aria-label="Research notebook on GitHub (opens a new tab)"
+          className="flex min-h-16 items-center border-b-2 border-transparent text-[13px] text-ink-mute hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-[-6px] focus-visible:outline-ink sm:text-sm">
+          Notebook
+        </a>
       </nav>
     </header>
   );

@@ -3,7 +3,7 @@ import { Workspace } from "./workspace";
 
 export const metadata: Metadata = {
   title: "Strike — Annotation workspace",
-  description: "Review local footage, label strike attempts, and inspect saved model predictions.",
+  description: "Annotate MMA strike attempts and export reviewed windows for Strike's research pipeline.",
 };
 
 export default function WorkspacePage() {

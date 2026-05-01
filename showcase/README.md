@@ -2,7 +2,7 @@
 
 **Live: [strike.thomasou.com](https://strike.thomasou.com)**
 
-Review local MMA footage, annotate strike attempts, and inspect saved model predictions.
+Annotation and prediction-inspection tools for Strike's research on MMA strike-attempt classification. The study, methods, and saved results live in the [research notebook](../model/notebooks/Research_Notes.ipynb); this directory contains the supporting web interface.
 
 ## Quick Start
 
@@ -29,6 +29,6 @@ npm run build
 npm start
 ```
 
-Production also runs on port 2100. See the [repository README](../README.md) for the Python pipeline and project structure.
+Production also runs on port 2100. See the [repository README](../README.md) for the Python pipeline and the [experiment protocol](../PROJECT_OVERVIEW.md) for dataset and evaluation rules.
 
 Built by Thomas Ou

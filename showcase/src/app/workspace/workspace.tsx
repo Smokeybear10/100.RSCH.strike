@@ -411,7 +411,7 @@ export function Workspace() {
 
       <header className={styles.header}>
         <h1>Workspace</h1>
-        <p>Review footage, label attempts, and compare saved predictions.</p>
+        <p>Label strike attempts and prepare reviewed windows for experiments.</p>
       </header>
       <div className={styles.toolbar}>
         <div className={styles.projectPicker}>
