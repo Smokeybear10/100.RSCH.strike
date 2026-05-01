@@ -1,95 +1,110 @@
-# Strike | MMA Video Review
+# Strike | Strike Attempt Classification
 
-**Live: [Workspace](https://strike.thomasou.com/workspace) · [Recorded demo](https://strike.thomasou.com/demo)**
+**Live demo: [Recorded predictions](https://strike.thomasou.com/demo) · [Annotation workspace](https://strike.thomasou.com/workspace)**
 
-Label strike attempts in fight footage and compare them with saved model predictions.
+I built Strike to study whether short video windows can identify MMA strike attempts and whether masking the background changes the result.
 
-[![Strike demo with fight footage, playback controls, and recorded model scores](assets/demos/strike-demo.png)](https://strike.thomasou.com/demo)
+## Start Here
 
-## Quick Start
+Open [Research_Notes.ipynb](model/notebooks/Research_Notes.ipynb). It contains the label definition, historical training results, current baseline, recorded predictions, and executable checks of the saved artifacts. The saved outputs can be read without installing anything.
+
+The evidence is a 38-window pilot and recorded development predictions. **Accuracy on unseen fights has not been established, and there is no measured raw-versus-masked result.**
+
+[Check saved artifacts](#check-the-saved-artifacts) · [Run an experiment](#run-a-new-experiment) · [Data protocol](PROJECT_OVERVIEW.md)
+
+## Question and Method
+
+The target is a **strike attempt**, including a blocked or missed punch, kick, knee, or elbow. Contact is a separate annotation. Uncertain windows stay outside the binary training labels.
+
+The current [appearance baseline](model/baseline.py) freezes an ImageNet ResNet-50, averages the feature vectors from five frames, and trains a two-class linear head. Frames are resized to a 256-pixel short edge, center-cropped to 224 pixels, and normalized with ImageNet statistics. Averaging discards frame order, so this baseline does not explicitly model motion direction or timing.
+
+The experiment code supports raw and masked inputs from the same windows. A controlled comparison requires matching fight assignments, labels, seed, preprocessing, and training settings. Checkpoint selection uses validation loss; reserved test fights are evaluated separately. The [data protocol](PROJECT_OVERVIEW.md) defines the manifest, annotation rules, leakage checks, and comparison procedure.
+
+## What the Saved Runs Show
+
+The historical MMAction2 TSN run is separate from the current frozen-backbone baseline. Its [exported logs](showcase/src/lib/legacy-training.json) record the following at epoch 20:
+
+| Historical partition | Windows | Accuracy |
+| --- | ---: | ---: |
+| Training | 30 | 100% |
+| Validation | 6 | 50% |
+| Independent test | — | Not recorded |
+
+Validation accuracy was 100% at epochs 1 and 2, also on just six windows. Both clips called “test” in the original annotation files also appear in validation. The collection has 38 distinct windows, with two outside those partitions; its old labels need review against the current attempt definition. These results do not estimate performance on new fights.
+
+The [recorded demo export](showcase/src/lib/recorded-demo.json) comes from a separate frozen-ResNet development checkpoint trained on the 38 pilot windows. It contains 120 scored windows across three sequences, with hashes for all 600 displayed frames. Those sequences have no reviewed ground-truth labels or benchmark metrics. The scores are uncalibrated, and threshold crossings are not counts of individual strikes.
+
+## Check the Saved Artifacts
+
+Clone the repository, then run the notebook's verification cells from the repository root with Python 3.11 or later:
 
 ```bash
 git clone https://github.com/Smokeybear10/100.RSCH.strike.git
-cd 100.RSCH.strike/showcase
+cd 100.RSCH.strike
+python3 - <<'PY'
+import json
+from pathlib import Path
+
+notebook = json.loads(Path("model/notebooks/Research_Notes.ipynb").read_text())
+namespace = {}
+for index, cell in enumerate(notebook["cells"]):
+    if cell["cell_type"] == "code":
+        exec(compile("".join(cell["source"]), f"cell-{index}", "exec"), namespace)
+PY
+```
+
+This uses only the Python standard library. It checks the historical notebook fingerprint and exported metrics, verifies the 600 frame hashes and 120 window records, and prints the saved summaries. It does not download data, write files, rerun neural inference, or measure prediction accuracy.
+
+The original [TSN](model/notebooks/TSN_Pipeline.ipynb) and [3D-CNN](model/notebooks/3DCNN_Pipeline.ipynb) notebooks are retained as experiment records. The historical TSN notebook uses a personal Drive path; its original training environment and inputs are not a self-contained reproduction. Trained checkpoints and source videos are not included.
+
+## Run a New Experiment
+
+Use Python 3.11. Install the pinned [model dependencies](model/requirements.txt) from the repository root:
+
+```bash
+python3.11 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r model/requirements.txt
+```
+
+These commands require your own reviewed manifest and frames following [PROJECT_OVERVIEW.md](PROJECT_OVERVIEW.md). Assign entire fights, including replays, to train, validation, or test. Workspace exports are development data; they do not provide an untouched test set.
+
+```bash
+python -m model.data audit --manifest data-local/reviewed.json --data-root /path/to/frames --output runs/data-audit.json
+python -m model.train --manifest data-local/reviewed.json --data-root /path/to/frames --output runs/raw --variant raw
+```
+
+The default run uses CPU, seed 42, and 20 epochs. ImageNet weights download on first use. The run saves its configuration, dataset audit, training history, selected checkpoint, and per-window validation predictions. Use new output paths for each experiment.
+
+After freezing the design and model choice, evaluate the reserved test fights:
+
+```bash
+python -m model.evaluate --run runs/raw --manifest data-local/reviewed.json --data-root /path/to/frames
+```
+
+Results are written to `runs/raw/evaluation/test_metrics.json` and `test_predictions.csv`, including per-fight metrics. The notebook has the preparation and prediction-import commands; [compare.py](model/compare.py) checks paired raw/masked runs. None of these commands supplies the missing independent dataset or turns the historical pilot into a benchmark.
+
+## Review Footage
+
+The browser workspace labels local footage, saves annotations in IndexedDB, and exports JSON backups. Videos stay on the device and must be reconnected after reloading. Saved model scores can be imported without replacing human labels. Inference runs separately in Python.
+
+![Recorded predictions alongside their source frames in Strike](assets/demos/strike-demo.png)
+
+To run the workspace and recorded demo locally:
+
+```bash
+cd showcase
 npm ci
 npm run dev
 ```
 
-Open http://localhost:2100. The homepage opens Workspace; Demo is the other tab. Neither needs an account or a Python environment.
+Open http://localhost:2100. `/` opens the workspace; `/demo` plays the committed predictions. See [showcase/README.md](showcase/README.md) for frontend checks.
 
-## What It Does
+## Limits
 
-**Workspace**
+The pilot lacks complete fight identities and source timestamps. Neighboring windows are correlated, the old validation and test memberships overlap, and the displayed demo footage has no reviewed labels. More windows from those sequences would not establish generalization.
 
-- Review local fight footage and mark short windows as attempt, no attempt, or uncertain. Blocked and missed strikes count as attempts.
-- Record contact outcomes and notes separately. Filter the queue by unfinished labels, uncertainty, or disagreements with model scores.
-- Save annotations in the browser and export JSON backups. Reconnect the original video after reloading; footage is never uploaded or stored in the annotation database.
-- Import saved predictions without changing human labels. Editing a window's boundaries removes its old score.
+The current task classifies windows. It does not establish landed-strike counts, fighter attribution, event boundaries, calibrated probabilities, or the benefit of segmentation. Answering the original question requires reviewed examples from separate fights and a matched raw/masked evaluation on reserved footage.
 
-Use `I` / `O` for in/out points, `1` / `2` / `3` to label, `N` for a new window, and arrow keys to seek by 0.1 seconds. Unsaved window edits are protected when switching projects or leaving the page.
-
-**Recorded demo**
-
-Three fight sequences play alongside their saved checkpoint predictions. Pause, seek, or step between five-frame windows to inspect the footage and corresponding score. These are recorded outputs, not inference running in the browser.
-
-**Python pipeline**
-
-Prepare timestamped frames from annotated footage, audit dataset splits, train raw or masked baselines, and export predictions back to Workspace. Runs record configuration, source hashes, checkpoints, and per-window metrics so results can be traced to their inputs.
-
-## Score Your Footage
-
-Python 3.11. From the repository root:
-
-```bash
-uv venv --python 3.11
-uv pip install --python .venv/bin/python -r model/requirements.txt
-source .venv/bin/activate
-```
-
-Export an annotation backup from Workspace, then use a completed raw-model training run:
-
-```bash
-python -m model.prepare --annotations annotations.json --video /path/to/footage.mp4 --output data-local/reviewed
-python -m model.predict --prepared data-local/reviewed --run runs/your-raw-run --output runs/workspace-review
-```
-
-Import `runs/workspace-review/predictions.json` into Workspace. `runs/your-raw-run` must contain a trained checkpoint and its run records; weights and source videos are not included in this repository. Use new output directories for each run. See the [research notebook](model/notebooks/Research_Notes.ipynb) for training commands and the [data protocol](PROJECT_OVERVIEW.md) for labels, manifests, and fight-level splits.
-
-## Research
-
-[Research_Notes.ipynb](model/notebooks/Research_Notes.ipynb) contains the methods, saved experiment results, provenance checks, and reproduction commands. Its verification cells run with the Python standard library. The original [TSN](model/notebooks/TSN_Pipeline.ipynb) and [3D-CNN](model/notebooks/3DCNN_Pipeline.ipynb) notebooks remain available.
-
-The current baseline averages frozen ImageNet ResNet-50 features across five frames and trains a linear classifier. It models appearance rather than motion order. The original dataset has 38 windows, with overlapping historical validation and test examples; accuracy on unseen fights has not been established. Demo scores are uncalibrated and are not strike counts.
-
-## Tech Stack
-
-| Layer | Tools |
-|---|---|
-| Workspace and demo | Next.js, React, TypeScript, CSS modules, Tailwind CSS |
-| Local annotations | IndexedDB, JSON backups, SHA-256 video checks |
-| Frame preparation | Python, PyAV, Pillow |
-| Model and evaluation | PyTorch, torchvision, ResNet-50 |
-| Research | Jupyter notebooks, MMAction2 TSN, SAM2 experiments |
-
-## Project Structure
-
-```text
-showcase/src/app/
-  workspace/                 # Local video review and annotations
-  demo/                      # Recorded predictions and playback
-showcase/src/lib/
-  recorded-demo.json         # Saved scores and frame provenance
-model/
-  annotations.py             # Workspace export validation
-  prepare.py                 # Timestamped frame extraction
-  predict.py                 # Checkpoint scores for review
-  data.py                    # Manifest validation and leakage audit
-  baseline.py                # Frozen encoder and classifier
-  train.py                   # Training and checkpoint selection
-  evaluate.py                # Separate test evaluation
-  compare.py                 # Paired raw/masked comparisons
-  notebooks/                 # Research notes and original experiments
-PROJECT_OVERVIEW.md           # Data and experiment protocol
-```
 
 Built by Thomas Ou
