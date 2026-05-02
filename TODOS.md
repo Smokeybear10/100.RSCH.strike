@@ -16,7 +16,3 @@ The annotation workspace and video-to-manifest/prediction workflow are implement
 - Review per-fight errors and paired prediction changes before claiming a benefit from segmentation.
 - Repeat with fixed, reported seeds; assess uncertainty at the fight level when enough fights exist.
 - Consider a temporal model only after establishing the appearance baseline. Frame averaging cannot distinguish forward from reversed motion.
-
-## Deferred UI work
-
-Spritesheets for hero playback remain deferred until measured network or scrub performance justifies them. Research data and reproducible results take priority.

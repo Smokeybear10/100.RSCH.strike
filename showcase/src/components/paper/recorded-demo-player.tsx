@@ -1,11 +1,16 @@
-import { researchClips } from "@/lib/research-data";
 import recordedDemo from "@/lib/recorded-demo.json";
 import type { Clip } from "@/lib/types";
 import { DemoPlayer } from "./demo-player";
 
+const clipNames: Record<string, string> = {
+  knockdown: "Knockdown",
+  exchange: "Exchange",
+  pressure: "Pressure",
+};
+
 const clips: Clip[] = Object.entries(recordedDemo.clips).map(([id, clip]) => ({
   id,
-  name: researchClips.find((example) => example.id === id)?.name ?? id,
+  name: clipNames[id] ?? id,
   totalFrames: clip.totalFrames,
   fps: 12,
   windowSize: clip.windowSize,
