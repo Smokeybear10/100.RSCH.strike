@@ -23,7 +23,7 @@ The original pilot contains 38 windows. A historical TSN run, separate from the 
 
 The two original test windows also appear in validation. **There is no independent test result or measured benefit from masking.**
 
-The demo shows 120 recorded predictions from a separate frozen-ResNet development model. Its clips have no reviewed ground-truth labels, and its scores are uncalibrated. The notebook contains the saved logs, provenance checks, and full limitations.
+The demo contains 120 predictions from a separate frozen-ResNet development model. A [reproduction check](model/notebooks/Research_Notes.ipynb) matched all 120 scores exactly, plus 60 windows from separate footage. Reversing the demo frames left all 120 threshold decisions unchanged. Neither set has reviewed labels; these checks do not measure accuracy, and the scores remain uncalibrated.
 
 ## Run locally
 

@@ -61,6 +61,8 @@ This illustrates one record, not a trainable dataset. Training needs nonempty tr
 
 Use stable source/fight IDs without surrounding whitespace. The audit can detect shared IDs and image content, but cannot infer whether two differently named videos depict the same fight. Human provenance review remains necessary. Content hashes cannot establish footage rights or annotation correctness.
 
+The bundled `showcase/public/clips/*-masked/` images are presentation overlays with colored fills, edge effects, and altered backgrounds. They are not foreground-only experimental inputs. Generate paired masks from the original frames, record the segmentation settings and any manual corrections, and keep all other preprocessing matched before comparing raw and masked models.
+
 ## Split Policy
 
 Assign complete fights, including replays, to one of `train`, `val`, or `test`. Do not split randomly by clip: fighters, camera, broadcast graphics, and nearby moments can otherwise leak across partitions. Build enough separate fights to cover both classes and different styles, angles, and events. A three-fight split satisfies separation mechanically but still gives a fragile estimate.
@@ -93,6 +95,6 @@ The supplied frames contain raw broadcast footage. Source metadata is missing; a
 
 The saved TSN configuration uses ImageNet ResNet-50 initialization and `load_from=None`. Downloading a Kinetics checkpoint in a different cell did not connect it to training. The backbone was not explicitly frozen. The recorded validation accuracy reaches 100% early and ends at 50% after 20 epochs on six clips. Inference then selects epoch20 rather than the saved best-validation checkpoint. No independent held-out evaluation is recorded.
 
-The current exporter reads those logs directly and embeds the notebook hash and output-cell index in the chart artifact. It does not reconstruct missing measurements. Illustrative film-room confidence traces are not predictions from that run.
+The current exporter reads those logs directly and embeds the notebook hash and output-cell index in the exported artifact. It does not reconstruct missing measurements.
 
 Built by Thomas Ou
